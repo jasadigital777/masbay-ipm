@@ -1,0 +1,425 @@
+import { useState, useRef } from "react";
+
+const BG = "#0d0f14", SURFACE = "#161920", CARD = "#1e2230", BORDER = "#2a2f45";
+const ACCENT = "#f5c518", TEXT = "#e8eaf2", MUTED = "#7a7f99", SUCCESS = "#3ddc84";
+
+const s = {
+  wrap: { background: BG, minHeight: "100vh", fontFamily: "'Inter',sans-serif", color: TEXT },
+  header: { background: "linear-gradient(135deg,#1a1f35,#0d0f14)", borderBottom: `1px solid ${BORDER}`, padding: "16px 20px", display: "flex", alignItems: "center", gap: 12 },
+  logoBadge: { background: ACCENT, color: "#000", fontWeight: 700, fontSize: 12, padding: "5px 10px", borderRadius: 7, letterSpacing: 0.5 },
+  h1: { fontWeight: 700, fontSize: 17, color: TEXT, margin: 0 },
+  sub: { fontSize: 11, color: MUTED, marginTop: 2 },
+  main: { maxWidth: 900, margin: "0 auto", padding: "24px 16px 60px" },
+  stepRow: { display: "flex", alignItems: "center", gap: 10, marginBottom: 12 },
+  stepNum: { background: ACCENT, color: "#000", fontWeight: 700, fontSize: 10, width: 20, height: 20, borderRadius: "50%", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 },
+  stepTxt: { fontWeight: 700, fontSize: 13, color: TEXT, letterSpacing: 0.3 },
+  card: { background: CARD, border: `1px solid ${BORDER}`, borderRadius: 14, padding: "20px", marginBottom: 18 },
+  sectionTitle: { fontSize: 11, fontWeight: 700, color: MUTED, textTransform: "uppercase", letterSpacing: 1, marginBottom: 12 },
+  grid3: { display: "grid", gridTemplateColumns: "repeat(auto-fill,minmax(110px,1fr))", gap: 8 },
+  fieldGrid2: { display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12, marginBottom: 12 },
+  fieldGrid3: { display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 12, marginBottom: 12 },
+  fieldLabel: { fontSize: 11, fontWeight: 500, color: MUTED, textTransform: "uppercase", letterSpacing: 0.4, marginBottom: 5, display: "block" },
+  input: { background: SURFACE, border: `1.5px solid ${BORDER}`, borderRadius: 8, color: TEXT, fontSize: 12, fontFamily: "Inter,sans-serif", padding: "9px 10px", outline: "none", width: "100%", boxSizing: "border-box" },
+  select: { background: SURFACE, border: `1.5px solid ${BORDER}`, borderRadius: 8, color: TEXT, fontSize: 12, fontFamily: "Inter,sans-serif", padding: "9px 10px", outline: "none", width: "100%", boxSizing: "border-box" },
+  textarea: { background: SURFACE, border: `1.5px solid ${BORDER}`, borderRadius: 8, color: TEXT, fontSize: 12, fontFamily: "Inter,sans-serif", padding: "9px 10px", outline: "none", width: "100%", boxSizing: "border-box", resize: "vertical" },
+  tagFlex: { display: "flex", flexWrap: "wrap", gap: 7 },
+  glowLine: { height: 2, background: `linear-gradient(90deg,transparent,${ACCENT},transparent)`, border: "none", margin: "16px 0", opacity: 0.4 },
+  btnGenerate: { width: "100%", background: `linear-gradient(135deg,${ACCENT},#e6a800)`, color: "#000", border: "none", borderRadius: 12, padding: "16px", fontWeight: 700, fontSize: 15, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", gap: 8, letterSpacing: 0.5 },
+  promptBox: { background: SURFACE, border: `1.5px solid ${BORDER}`, borderRadius: 14, padding: 18 },
+  tipsBox: { background: "rgba(61,220,132,0.07)", border: "1px solid rgba(61,220,132,0.25)", borderRadius: 10, padding: "14px 16px" },
+  uploadZone: { border: `2px dashed ${BORDER}`, borderRadius: 12, padding: "18px 14px", textAlign: "center", cursor: "pointer", background: SURFACE, position: "relative", transition: "border-color .2s" },
+  uploadIcon: { fontSize: 26, marginBottom: 6 },
+  uploadTitle: { fontSize: 13, fontWeight: 600, color: TEXT, marginBottom: 4 },
+  uploadSub: { fontSize: 11, color: MUTED, lineHeight: 1.4 },
+  badge: { position: "absolute", top: 7, right: 7, background: "rgba(245,197,24,0.15)", border: "1px solid rgba(245,197,24,0.4)", color: ACCENT, fontSize: 10, fontWeight: 600, padding: "2px 7px", borderRadius: 10 },
+  uploadTip: { background: "rgba(56,189,248,0.07)", border: "1px solid rgba(56,189,248,0.2)", borderRadius: 8, padding: "10px 14px", marginTop: 12 },
+  copyRow: { display: "flex", gap: 10, marginTop: 12, flexWrap: "wrap" },
+  btnCopy: { background: CARD, border: `1.5px solid ${BORDER}`, color: TEXT, borderRadius: 8, padding: "8px 16px", fontSize: 12, fontWeight: 600, cursor: "pointer" },
+  btnRegen: { background: "transparent", border: "1.5px solid #ff4d4d", color: "#ff4d4d", borderRadius: 8, padding: "8px 16px", fontSize: 12, fontWeight: 600, cursor: "pointer" },
+  tabs: { display: "flex", gap: 4, marginBottom: 14, background: SURFACE, border: `1px solid ${BORDER}`, borderRadius: 10, padding: 4 },
+  tab: { flex: 1, textAlign: "center", padding: "7px", borderRadius: 7, fontSize: 12, fontWeight: 600, cursor: "pointer", color: MUTED },
+  tabActive: { flex: 1, textAlign: "center", padding: "7px", borderRadius: 7, fontSize: 12, fontWeight: 600, cursor: "pointer", color: TEXT, background: CARD, border: `1px solid ${BORDER}` },
+  footer: { textAlign: "center", color: MUTED, fontSize: 11, padding: 20, borderTop: `1px solid ${BORDER}` },
+};
+
+function Chip({ label, active, onClick, color = "#a78bfa" }) {
+  return <div onClick={onClick} style={{ background: active ? `${color}1e` : SURFACE, border: `1.5px solid ${active ? color : BORDER}`, borderRadius: 20, padding: "6px 13px", fontSize: 12, cursor: "pointer", color: active ? color : TEXT, transition: "all .18s", userSelect: "none" }}>{label}</div>;
+}
+function BisnisBtn({ icon, label, active, onClick }) {
+  return <div onClick={onClick} style={{ background: active ? "rgba(245,197,24,0.10)" : SURFACE, border: `1.5px solid ${active ? ACCENT : BORDER}`, borderRadius: 10, padding: "11px 7px", textAlign: "center", cursor: "pointer", color: active ? ACCENT : TEXT, fontSize: 11, fontWeight: 500, userSelect: "none" }}><div style={{ fontSize: 20, marginBottom: 5 }}>{icon}</div>{label}</div>;
+}
+function PaletteBtn({ label, gradient, active, onClick }) {
+  return <div onClick={onClick} style={{ display: "flex", alignItems: "center", gap: 7, background: active ? "rgba(245,197,24,0.08)" : SURFACE, border: `1.5px solid ${active ? ACCENT : BORDER}`, borderRadius: 8, padding: "6px 11px", cursor: "pointer", fontSize: 11, color: TEXT, userSelect: "none" }}><div style={{ width: 26, height: 16, borderRadius: 4, background: gradient, flexShrink: 0 }} />{label}</div>;
+}
+function UkuranBtn({ label, sub, w, h, active, onClick }) {
+  return <div onClick={onClick} style={{ background: active ? "rgba(245,197,24,0.08)" : SURFACE, border: `1.5px solid ${active ? ACCENT : BORDER}`, borderRadius: 10, padding: "12px 8px", textAlign: "center", cursor: "pointer", color: TEXT, userSelect: "none" }}><div style={{ width: w, height: h, background: BORDER, borderRadius: 3, margin: "0 auto 7px" }} /><div style={{ fontSize: 11, fontWeight: 600 }}>{label}</div><div style={{ fontSize: 10, color: MUTED, marginTop: 2 }}>{sub}</div></div>;
+}
+function AiBtn({ icon, label, active, onClick }) {
+  return <div onClick={onClick} style={{ background: active ? "rgba(56,189,248,0.12)" : SURFACE, border: `1.5px solid ${active ? "#38bdf8" : BORDER}`, borderRadius: 20, padding: "8px 16px", fontSize: 13, fontWeight: 600, cursor: "pointer", color: active ? "#38bdf8" : TEXT, display: "flex", alignItems: "center", gap: 7, userSelect: "none" }}>{icon} {label}</div>;
+}
+
+const BISNIS = [
+  { icon: "🏍️", label: "Bengkel Motor", val: "bengkel motor / otomotif", desc: "servis motor, ganti oli, tune up, tambal ban" },
+  { icon: "👕", label: "Laundry", val: "laundry kiloan / pakaian", desc: "cuci kiloan, cuci satuan, setrika, antar jemput" },
+  { icon: "🍗", label: "Kuliner", val: "kuliner / warung makan / restoran", desc: "makanan lezat, menu spesial, masakan nusantara" },
+  { icon: "🧋", label: "Minuman/Cafe", val: "minuman kekinian / cafe / kedai kopi", desc: "minuman segar, kopi, teh, boba, juice" },
+  { icon: "✂️", label: "Barbershop", val: "barbershop / salon rambut", desc: "potong rambut, cukur jenggot, perawatan rambut pria" },
+  { icon: "👗", label: "Fashion", val: "toko fashion / clothing / pakaian", desc: "pakaian trendy, outfit kekinian, koleksi terbaru" },
+  { icon: "📱", label: "Elektronik", val: "toko elektronik / gadget / handphone", desc: "gadget terlengkap, handphone, aksesoris, service" },
+  { icon: "🏠", label: "Properti", val: "properti / kos-kosan / kontrakan", desc: "hunian nyaman, strategis, fasilitas lengkap" },
+  { icon: "💄", label: "Kecantikan", val: "klinik kecantikan / skincare / salon", desc: "perawatan wajah, skincare, kecantikan profesional" },
+  { icon: "🎉", label: "Event/Wedding", val: "event organizer / wedding organizer", desc: "dekorasi elegan, paket lengkap, momen tak terlupakan" },
+  { icon: "📚", label: "Kursus/Bimbel", val: "jasa pendidikan / kursus / bimbel", desc: "belajar menyenangkan, tentor berpengalaman, hasil terjamin" },
+  { icon: "💊", label: "Apotek", val: "apotek / toko obat / health store", desc: "obat lengkap, suplemen, alat kesehatan, konsultasi" },
+  { icon: "🛒", label: "Sembako/Mini", val: "toko sembako / minimarket lokal", desc: "kebutuhan sehari-hari, harga terjangkau, lengkap" },
+  { icon: "📦", label: "Ekspedisi", val: "jasa ekspedisi / pengiriman / kurir", desc: "pengiriman cepat, aman, terpercaya, harga bersaing" },
+  { icon: "🏗️", label: "Material", val: "toko material bangunan / interior", desc: "material bangunan lengkap, kualitas terjamin, harga grosir" },
+  { icon: "📸", label: "Studio/Cetak", val: "studio foto / percetakan / desain grafis", desc: "cetak berkualitas, desain profesional, hasil tajam" },
+  { icon: "✈️", label: "Travel/Wisata", val: "travel / wisata / tour and travel", desc: "paket wisata terbaik, perjalanan nyaman, harga terjangkau" },
+  { icon: "🌾", label: "Agribisnis", val: "usaha ternak / pertanian / agribisnis", desc: "produk segar alami, langsung dari sumber, berkualitas" },
+  { icon: "🔧", label: "Service/Reparasi", val: "jasa reparasi / service elektronik", desc: "servis profesional, cepat, bergaransi, berpengalaman" },
+  { icon: "🧹", label: "Cleaning", val: "jasa kebersihan / cleaning service", desc: "bersih maksimal, tim profesional, peralatan modern" },
+  { icon: "💪", label: "Gym/Fitness", val: "gym / fitness center / olahraga", desc: "peralatan lengkap, trainer berpengalaman, hasil nyata" },
+  { icon: "⚡", label: "Lainnya", val: "bisnis umum / UMKM", desc: "usaha kreatif, produk berkualitas, layanan terbaik" },
+];
+
+const MOODS = [
+  { label: "⚡ Bold & Edgy", val: "bold aggressive dark dramatic high contrast striking", layout: "dynamic asymmetric layout with strong diagonal lines" },
+  { label: "🧊 Clean Modern", val: "clean professional minimalist modern sleek whitespace", layout: "clean grid layout with generous whitespace and sharp edges" },
+  { label: "🌈 Colorful Warm", val: "warm bright colorful cheerful playful energetic", layout: "vibrant playful layout with rounded shapes and fun elements" },
+  { label: "✨ Luxury Premium", val: "luxury premium elegant dark gold sophisticated exclusive", layout: "elegant centered layout with fine gold lines and premium spacing" },
+  { label: "🌿 Natural / Eco", val: "natural organic fresh green earthy botanical eco-friendly", layout: "organic flowing layout with leaf and nature-inspired shapes" },
+  { label: "🍽️ Food Vibes", val: "food photography vibrant appetizing culinary", layout: "mouth-watering close-up food photography as hero background" },
+  { label: "🔮 Tech / Futuristik", val: "tech futuristic neon cyber glow hi-tech digital", layout: "sci-fi grid with glowing neon lines and hexagonal patterns" },
+  { label: "📻 Retro / Vintage", val: "retro vintage classic nostalgic old-school grunge", layout: "vintage badge layout with distressed textures and retro fonts" },
+  { label: "🌸 Kawaii / Cute", val: "kawaii cute pastel soft feminine sweet aesthetic", layout: "soft pastel layout with cute icons and rounded kawaii elements" },
+  { label: "🕌 Islami / Religi", val: "islamic religious arabesque ornamental spiritual halal", layout: "arabesque geometric pattern border with centered calligraphy" },
+  { label: "🏃 Sporty / Dinamis", val: "sporty dynamic action athletic motion energy", layout: "dynamic speed lines layout with bold athletic typography" },
+  { label: "🎯 Flat Design", val: "flat design vector illustration simple icon-based", layout: "flat vector layout with bold icons and simple geometric shapes" },
+  { label: "📦 3D / Realistik", val: "3D realistic render product mockup dimensional shadow", layout: "3D product mockup centered with realistic drop shadows" },
+  { label: "🌊 Gradient Pop", val: "gradient colorful vivid neon pop rainbow holographic", layout: "full-bleed gradient background with holographic accents" },
+  { label: "🎬 Cinematic Dark", val: "dark moody cinematic dramatic shadow noir mysterious", layout: "cinematic widescreen layout with dramatic lighting and fog" },
+  { label: "🪵 Rustic / Artisan", val: "rustic handmade artisan craft woodgrain texture earthy", layout: "rustic wood texture background with handcrafted badge overlay" },
+];
+
+const PALETTES = [
+  { label: "Merah & Hitam", val: "dominant red (#CC0000) and black (#0A0A0A), with white (#FFFFFF) accent text", g: "linear-gradient(90deg,#ff2222,#111)" },
+  { label: "Biru & Putih", val: "dominant blue (#1565C0) and white (#FFFFFF), with light sky blue (#E3F2FD) accent", g: "linear-gradient(90deg,#1a7fe8,#fff)" },
+  { label: "Hijau & Putih", val: "dominant green (#2E7D32) and white (#FFFFFF), with mint (#E8F5E9) accent", g: "linear-gradient(90deg,#1da350,#fff)" },
+  { label: "Hitam & Gold", val: "dominant black (#0A0A0A) and gold (#F5C518), with warm white (#FFF8E1) accent", g: "linear-gradient(90deg,#111,#f5c518)" },
+  { label: "Orange & Coklat", val: "dominant orange (#E65100) and dark brown (#3E2723), with cream (#FFF8E1) accent", g: "linear-gradient(90deg,#ff6b00,#2a1200)" },
+  { label: "Ungu & Pink", val: "dominant purple (#6A1B9A) and hot pink (#EC407A), with light lavender (#F3E5F5) accent", g: "linear-gradient(90deg,#7c3aed,#ec4899)" },
+  { label: "Kuning & Hitam", val: "dominant yellow (#F9A825) and black (#0A0A0A), with white (#FFFFFF) accent", g: "linear-gradient(90deg,#f5c518,#111)" },
+  { label: "Teal & Putih", val: "dominant teal (#00695C) and white (#FFFFFF), with light cyan (#E0F2F1) accent", g: "linear-gradient(90deg,#0d9488,#fff)" },
+  { label: "Merah, Kuning & Putih", val: "dominant red (#D32F2F), yellow (#FDD835), and white (#FFFFFF)", g: "linear-gradient(90deg,#ef4444,#facc15,#fff)" },
+  { label: "Navy & Biru Langit", val: "dominant dark navy (#0D1B2A) and sky blue (#38BDF8), with white (#FFFFFF) accent", g: "linear-gradient(90deg,#1e3a5f,#38bdf8,#fff)" },
+  { label: "Pink & Krem", val: "dominant soft pink (#F48FB1) and cream (#FDF2F8), with rose white (#FFF0F5) accent", g: "linear-gradient(90deg,#f472b6,#fdf2f8)" },
+  { label: "Coklat & Krem", val: "dominant brown (#5D4037) and cream (#FEF3C7), with warm beige (#FFF8EF) accent", g: "linear-gradient(90deg,#92400e,#fef3c7)" },
+  { label: "Putih & Silver", val: "dominant white (#FFFFFF), silver (#B0BEC5), and light grey (#ECEFF1)", g: "linear-gradient(90deg,#fff,#94a3b8,#e2e8f0)" },
+  { label: "Merah Tua & Krem", val: "dominant deep maroon (#7F1D1D) and cream (#FEF9EF), with off-white (#FFFBF5) accent", g: "linear-gradient(90deg,#7f1d1d,#fef9ef)" },
+  { label: "Hijau Neon & Hitam", val: "dominant neon green (#00E676) and near-black (#0A0A0A), with dark grey (#1A1A1A) accent", g: "linear-gradient(90deg,#22c55e,#0a0a0a)" },
+  { label: "Indigo & Lavender", val: "dominant indigo (#3730A3) and light lavender (#E0E7FF), with white (#FFFFFF) accent", g: "linear-gradient(90deg,#4f46e5,#e0e7ff)" },
+  { label: "Hijau Emerald & Gold", val: "dominant emerald green (#064E3B) and gold (#F5C518), with cream (#FFFBEB) accent", g: "linear-gradient(90deg,#065f46,#f5c518)" },
+  { label: "Orange & Kuning Gradient", val: "warm orange (#F97316) to yellow (#FBBF24) gradient, with white (#FFFFFF) text accent", g: "linear-gradient(90deg,#f97316,#fbbf24)" },
+];
+
+const UKURAN = [
+  { label: "Landscape", sub: "16:9 — FB Cover", ar: "16:9", val: "landscape horizontal banner 16:9 ratio (1920x1080px)", w: 54, h: 30 },
+  { label: "Square", sub: "1:1 — IG Feed", ar: "1:1", val: "square social media post 1:1 ratio (1080x1080px)", w: 34, h: 34 },
+  { label: "Portrait", sub: "9:16 — IG Story", ar: "9:16", val: "portrait vertical story 9:16 ratio (1080x1920px)", w: 22, h: 40 },
+  { label: "Billboard", sub: "4:1 — Spanduk", ar: "4:1", val: "wide horizontal billboard 4:1 ratio (4000x1000px)", w: 62, h: 15 },
+  { label: "A4 Flyer", sub: "3:4 — Print", ar: "3:4", val: "A4 portrait flyer print 3:4 ratio (2480x3508px)", w: 27, h: 36 },
+  { label: "X-Banner", sub: "1:2 — Standing", ar: "1:2", val: "X-banner roll up standing display 1:2 ratio (600x1600px)", w: 19, h: 38 },
+];
+
+const AI_TOOLS = [
+  { icon: "🤖", label: "ChatGPT", val: "ChatGPT / DALL-E", tips: ["Buka ChatGPT lalu aktifkan fitur Image Generation (ikon gambar)", "Paste prompt langsung di kolom chat tanpa perlu edit", "Minta variasi: ketik 'buat 4 variasi berbeda dari prompt ini'", "Untuk revisi warna: 'ubah warna utama menjadi biru tua dan emas'"] },
+  { icon: "♊", label: "Gemini", val: "Gemini (Google)", tips: ["Buka gemini.google.com → pastikan pakai Gemini Advanced", "Aktifkan Imagen dari menu tools/ekstensi jika belum aktif", "Paste prompt, tambahkan: 'buat dalam resolusi tinggi'", "Tersedia juga di Google Workspace dan aplikasi Gemini di HP"] },
+  { icon: "🎨", label: "Canva AI", val: "Canva AI (Magic Media)", tips: ["Buka Canva → klik Apps → cari Magic Media atau Text to Image", "Pilih ratio kanvas sesuai ukuran banner sebelum generate", "Paste prompt di kolom, pilih style 'Photo' atau 'Illustration'", "Hasil langsung bisa diedit di Canva tanpa keluar aplikasi"] },
+  { icon: "💫", label: "Dreamina", val: "Dreamina (CapCut AI)", tips: ["Buka app Dreamina atau fitur AI Image di CapCut", "Pilih 'Text to Image' lalu paste prompt di kolom yang tersedia", "Pilih ratio sesuai banner: 16:9, 1:1, 9:16, dst", "Hasil bisa langsung dipakai untuk konten sosial media"] },
+];
+
+// ─── TEMPLATE ENGINE ───────────────────────────────────────────────
+function generatePrompt(form, bisnis, bisnisObj, mood, moodObj, palette, ukuran, aiTool) {
+  const nama = form.nama.trim() || bisnisObj.val;
+  const tagline = form.tagline.trim();
+  const produk = form.produk.trim() || bisnisObj.desc;
+  const promo = form.promo.trim();
+  const harga = form.harga.trim();
+  const telepon = form.telepon.trim();
+  const alamat = form.alamat.trim();
+  const sosmed = form.sosmed.trim();
+  const jam = form.jam.trim();
+  const target = form.target.trim();
+  const usp = form.usp.trim();
+  const elemen = form.elemen.trim();
+  const catatan = form.catatan.trim();
+  const tujuan = form.tujuan;
+
+  // Headline logic
+  let headline = "";
+  if (promo) headline = promo.toUpperCase();
+  else if (tagline) headline = tagline.toUpperCase();
+  else headline = `TERPERCAYA & PROFESIONAL`;
+
+  // Sub-headline
+  let subHeadline = tagline && promo ? tagline : (produk ? `${produk.split(",")[0]}` : bisnisObj.desc);
+
+  // CTA
+  let cta = "HUBUNGI KAMI SEKARANG";
+  if (telepon) cta = `WA: ${telepon}`;
+  if (tujuan.includes("grand opening")) cta = "KUNJUNGI KAMI SEKARANG!";
+  if (tujuan.includes("lowongan")) cta = "DAFTAR SEKARANG!";
+
+  // Visual elements
+  let visualEl = elemen || "";
+  const bisnisVisuals = {
+    "bengkel motor": "realistic motorcycle closeup, chrome engine parts, mechanic tools, oil drops",
+    "laundry": "fluffy white clean clothes, washing machine bubbles, fresh fabric texture",
+    "kuliner": "steaming hot delicious food close-up, fresh ingredients, plate styling",
+    "minuman": "colorful cold drink with ice, condensation drops, fresh fruit garnish",
+    "barbershop": "razor blade, scissors, comb, hair styling tools, sharp clean look",
+    "fashion": "stylish clothing flat lay, fabric texture, trendy outfit arrangement",
+    "elektronik": "modern gadgets, smartphone, LED light glow, tech circuit patterns",
+    "properti": "modern house exterior, interior living room, architectural lines",
+    "kecantikan": "skincare products arrangement, glowing skin texture, beauty tools",
+    "event": "elegant floral decoration, fairy lights bokeh, celebration confetti",
+    "pendidikan": "open book, pencil, graduation cap, learning icons",
+    "apotek": "pharmacy pill capsules, health cross icon, clean medical aesthetic",
+    "sembako": "fresh vegetables, grocery products arranged neatly, colorful produce",
+    "ekspedisi": "delivery box, fast motion blur, logistics icons, map pin",
+    "material": "construction tools, bricks, architectural blueprint lines",
+    "studio": "camera lens, color swatches, printing ink splash, design grid",
+    "travel": "beautiful travel destination landscape, airplane silhouette, map elements",
+    "pertanian": "fresh green crops, farm landscape, natural earth tones, harvest",
+    "reparasi": "tools, screwdriver, wrench, circuit board, repair workspace",
+    "cleaning": "sparkling clean surface, cleaning spray, bubbles, mop and bucket",
+    "gym": "dumbbells, fitness equipment, muscle silhouette, sweat drops",
+  };
+  const matchKey = Object.keys(bisnisVisuals).find(k => bisnis.toLowerCase().includes(k));
+  const defaultVisual = matchKey ? bisnisVisuals[matchKey] : "relevant business product or service visual, professional setting";
+  if (!visualEl) visualEl = defaultVisual;
+
+  // Mood layout
+  const layout = moodObj?.layout || "balanced centered layout with clear visual hierarchy";
+
+  // Build text overlay section
+  let textSection = `\n\nTEKS PADA BANNER (susun dengan hierarki visual yang jelas):\n`;
+  textSection += `• HEADLINE UTAMA (font besar, bold, kontras tinggi): "${headline}"\n`;
+  textSection += `• Nama Bisnis (font medium, eyecatching): "${nama}"\n`;
+  if (subHeadline) textSection += `• Sub-headline (font lebih kecil): "${subHeadline}"\n`;
+  if (harga) textSection += `• Badge Harga (kotak highlight, eye-catching): "${harga}"\n`;
+  textSection += `• CTA Button (tombol mencolok, kontras): "${cta}"\n`;
+  if (sosmed) textSection += `• Info Kontak: "${sosmed}"\n`;
+  if (alamat) textSection += `• Alamat singkat: "${alamat}"\n`;
+  if (jam) textSection += `• Jam Operasional: "${jam}"\n`;
+
+  // Build prompt
+  let prompt = `Desain banner ${tujuan} untuk bisnis "${nama}" yang bergerak di bidang ${bisnis}.\n\n`;
+  prompt += `FORMAT & UKURAN: ${ukuran.val}.\n\n`;
+  prompt += `GAYA VISUAL: ${moodObj?.val || mood}. ${layout}.\n\n`;
+  prompt += `PALET WARNA: ${palette}. Gunakan warna-warna ini secara konsisten dan harmonis di seluruh elemen banner.\n\n`;
+  prompt += `ELEMEN VISUAL UTAMA: ${visualEl}. Tempatkan sebagai latar belakang hero atau elemen dekoratif yang mendukung pesan bisnis.\n\n`;
+  prompt += `KOMPOSISI & LAYOUT: ${layout}. Pastikan ada area kosong (breathing space) yang cukup agar teks mudah dibaca. Gunakan prinsip rule of thirds untuk komposisi visual.\n\n`;
+  prompt += `TIPOGRAFI: Pilih font yang sesuai dengan gaya ${moodObj?.val?.split(" ")[0] || "modern"}. Headline menggunakan font bold besar dan kontras tinggi. Sub-teks menggunakan font lebih ringan namun tetap mudah dibaca.\n`;
+  prompt += textSection;
+  if (usp) prompt += `\nKEUNGGULAN YANG DITONJOLKAN: "${usp}". Masukkan elemen visual yang mencerminkan keunggulan ini.\n`;
+  if (target) prompt += `\nTARGET AUDIENS: ${target}. Sesuaikan gaya visual dan nada desain agar relevan dan menarik bagi segmen ini.\n`;
+  if (catatan) prompt += `\nCATATAN KHUSUS DARI KLIEN: "${catatan}". Prioritaskan arahan ini dalam desain.\n`;
+  prompt += `\nKUALITAS OUTPUT: Resolusi tinggi, detail tajam, siap cetak dan siap posting di media sosial. Hasil akhir terlihat profesional, tidak penuh sesak, dan langsung menarik perhatian dalam 3 detik pertama.`;
+  if (aiTool.val.includes("DALL-E") || aiTool.val.includes("ChatGPT")) {
+    prompt += `\n\nOptimasi untuk DALL-E: gunakan deskripsi visual yang konkret dan spesifik. Hindari instruksi abstrak.`;
+  } else if (aiTool.val.includes("Canva")) {
+    prompt += `\n\nOptimasi untuk Canva Magic Media: fokus pada gaya dan suasana keseluruhan, bukan detail teknis.`;
+  } else if (aiTool.val.includes("Dreamina")) {
+    prompt += `\n\nOptimasi untuk Dreamina: tambahkan kata kunci gaya seperti 'commercial photography, advertising banner, professional graphic design'.`;
+  }
+  return prompt;
+}
+
+function UploadZone({ title, badge, icon, sub, files, onUpload, onClear }) {
+  const ref = useRef();
+  const hasFile = files.length > 0;
+  return (
+    <div>
+      <div style={{ ...s.sectionTitle, marginBottom: 8 }}>{title}</div>
+      <div onClick={() => ref.current.click()} style={{ ...s.uploadZone, borderColor: hasFile ? SUCCESS : BORDER, borderStyle: hasFile ? "solid" : "dashed" }}>
+        <div style={s.badge}>{badge}</div>
+        <input ref={ref} type="file" accept="image/*" multiple style={{ display: "none" }} onChange={e => onUpload(e.target.files)} />
+        {files.length === 0 ? (<><div style={s.uploadIcon}>{icon}</div><div style={s.uploadTitle}>Klik untuk upload</div><div style={s.uploadSub}>{sub}</div></>) : (
+          <><div style={{ display: "flex", flexWrap: "wrap", gap: 5, justifyContent: "center", marginBottom: 8 }}>{files.slice(0, 4).map((f, i) => <img key={i} src={f.preview} alt="" style={{ width: 52, height: 52, objectFit: "cover", borderRadius: 6, border: `1.5px solid ${BORDER}` }} />)}</div>
+          <div style={{ fontSize: 11, color: SUCCESS, fontWeight: 600, marginBottom: 6 }}>{files.length} foto terpilih ✓</div>
+          <div onClick={e => { e.stopPropagation(); onClear(); }} style={{ background: "rgba(255,77,77,0.12)", border: "1px solid rgba(255,77,77,0.3)", color: "#ff4d4d", fontSize: 11, padding: "4px 10px", borderRadius: 8, cursor: "pointer", display: "inline-block", fontWeight: 600 }}>✕ Hapus</div></>
+        )}
+      </div>
+    </div>
+  );
+}
+
+export default function App() {
+  const [bisnis, setBisnis] = useState("bengkel motor / otomotif");
+  const [mood, setMood] = useState(MOODS[0].val);
+  const [palette, setPalette] = useState(PALETTES[0].val);
+  const [ukuran, setUkuran] = useState(UKURAN[0]);
+  const [aiTool, setAiTool] = useState(AI_TOOLS[0]);
+  const [tab, setTab] = useState("prompt");
+  const [result, setResult] = useState(null);
+  const [copied, setCopied] = useState(false);
+  const [refFiles, setRefFiles] = useState([]);
+  const [asetFiles, setAsetFiles] = useState([]);
+  const [form, setForm] = useState({ nama: "", tagline: "", produk: "", promo: "", harga: "", telepon: "", alamat: "", sosmed: "", jam: "", target: "", usp: "", elemen: "", catatan: "", tujuan: "promosi dan branding bisnis" });
+  const set = (k, v) => setForm(f => ({ ...f, [k]: v }));
+
+  const readFiles = (fileList, setter) => {
+    const arr = [];
+    let done = 0;
+    Array.from(fileList).forEach(file => {
+      const reader = new FileReader();
+      reader.onload = e => { arr.push({ name: file.name, preview: e.target.result }); done++; if (done === fileList.length) setter([...arr]); };
+      reader.readAsDataURL(file);
+    });
+  };
+
+  const generate = () => {
+    const bisnisObj = BISNIS.find(b => b.val === bisnis) || BISNIS[0];
+    const moodObj = MOODS.find(m => m.val === mood) || MOODS[0];
+    const prompt = generatePrompt(form, bisnis, bisnisObj, mood, moodObj, palette, ukuran, aiTool);
+    const tips = aiTool.tips;
+    let extra = "";
+    if (refFiles.length) extra += `\n\n📌 CATATAN REFERENSI: Pengguna telah menyiapkan ${refFiles.length} foto referensi desain. Gunakan foto tersebut sebagai panduan gaya, layout, dan warna saat menggunakan platform AI yang mendukung image input (seperti ChatGPT Vision atau Gemini).`;
+    if (asetFiles.length) extra += `\n\n🖼️ CATATAN ASET: Pengguna memiliki ${asetFiles.length} foto produk/aset bisnis. Upload foto tersebut bersamaan dengan prompt ini ke platform AI yang mendukung image input untuk hasil yang lebih akurat dan personal.`;
+    setResult({ prompt: prompt + extra, tips });
+    setTab("prompt");
+  };
+
+  const copy = async () => {
+    if (!result) return;
+    try {
+      await navigator.clipboard.writeText(result.prompt);
+      setCopied(true); setTimeout(() => setCopied(false), 2000);
+    } catch {
+      const el = document.getElementById("prompt-output");
+      if (el) { el.select(); document.execCommand("copy"); }
+      setCopied(true); setTimeout(() => setCopied(false), 2000);
+    }
+  };
+
+  const Field = ({ label, id, placeholder }) => (
+    <div style={{ display: "flex", flexDirection: "column", gap: 5 }}>
+      <label style={s.fieldLabel}>{label}</label>
+      <input style={s.input} placeholder={placeholder} value={form[id]} onChange={e => set(id, e.target.value)} />
+    </div>
+  );
+
+  return (
+    <div style={s.wrap}>
+      <style>{`* {box-sizing:border-box}`}</style>
+      <header style={s.header}>
+        <div style={s.logoBadge}>Dr. Banner</div>
+        <div><div style={s.h1}>AI Prompt Generator</div><div style={s.sub}>Buat prompt banner bisnis profesional dalam detik</div></div>
+        <div style={{ marginLeft: "auto", background: "rgba(61,220,132,0.12)", border: "1px solid rgba(61,220,132,0.3)", color: SUCCESS, fontSize: 11, padding: "4px 10px", borderRadius: 20, fontWeight: 500 }}>✅ No API Key</div>
+      </header>
+
+      <div style={s.main}>
+
+        <div style={s.stepRow}><div style={s.stepNum}>1</div><div style={s.stepTxt}>Pilih Jenis Bisnis</div></div>
+        <div style={s.card}>
+          <div style={s.grid3}>{BISNIS.map(b => <BisnisBtn key={b.val} {...b} active={bisnis === b.val} onClick={() => setBisnis(b.val)} />)}</div>
+        </div>
+
+        <div style={s.stepRow}><div style={s.stepNum}>2</div><div style={s.stepTxt}>Informasi Bisnis</div></div>
+        <div style={s.card}>
+          <div style={s.fieldGrid2}><Field label="Nama Bisnis / Brand *" id="nama" placeholder="Contoh: Bengkel Jaya Abadi" /><Field label="Tagline / Slogan" id="tagline" placeholder="Contoh: Cepat, Murah, Bergaransi" /></div>
+          <div style={s.fieldGrid2}><Field label="Produk / Layanan Utama *" id="produk" placeholder="Contoh: Servis motor, ganti oli, tune up" /><Field label="Penawaran / Promo Spesial" id="promo" placeholder="Contoh: Diskon 20%, Harga mulai 15rb" /></div>
+          <div style={s.fieldGrid3}><Field label="Harga (Opsional)" id="harga" placeholder="Contoh: Mulai Rp 25.000" /><Field label="No. WA / Telepon" id="telepon" placeholder="Contoh: 0815-7000-8002" /><Field label="Alamat / Lokasi" id="alamat" placeholder="Contoh: Jl. Sudirman No. 5" /></div>
+          <div style={s.fieldGrid2}><Field label="Sosial Media / Website" id="sosmed" placeholder="Contoh: @bengkeljayaabadi" /><Field label="Jam Operasional" id="jam" placeholder="Contoh: Buka 08.00–20.00, Senin–Sabtu" /></div>
+          <div style={s.fieldGrid2}><Field label="Target Audiens" id="target" placeholder="Contoh: Pria dewasa, ibu rumah tangga" /><Field label="Keunggulan / USP Bisnis" id="usp" placeholder="Contoh: Berpengalaman 10 tahun, bergaransi" /></div>
+          <div style={s.fieldGrid2}>
+            <div style={{ display: "flex", flexDirection: "column", gap: 5 }}>
+              <label style={s.fieldLabel}>Tujuan Banner *</label>
+              <select style={s.select} value={form.tujuan} onChange={e => set("tujuan", e.target.value)}>
+                <option value="promosi dan branding bisnis">Promosi & Branding</option>
+                <option value="promo diskon khusus">Promo Diskon Khusus</option>
+                <option value="grand opening pembukaan toko baru">Grand Opening</option>
+                <option value="lowongan kerja rekrutmen karyawan">Lowongan Kerja</option>
+                <option value="peluncuran produk atau menu baru">Produk / Menu Baru</option>
+                <option value="event acara pameran">Event / Pameran</option>
+                <option value="testimoni kepercayaan pelanggan">Testimoni / Kepercayaan</option>
+                <option value="pengumuman pindah alamat atau perubahan">Pengumuman Penting</option>
+                <option value="hari raya lebaran natal tahun baru">Hari Raya / Perayaan</option>
+              </select>
+            </div>
+            <Field label="Elemen Tambahan (Opsional)" id="elemen" placeholder="Contoh: logo motor, api, bintang, daun" />
+          </div>
+          <div style={{ display: "flex", flexDirection: "column", gap: 5 }}>
+            <label style={s.fieldLabel}>Catatan / Keterangan Khusus</label>
+            <textarea style={s.textarea} rows={2} placeholder="Contoh: Tonjolkan kesan modern. Tidak terlalu banyak teks..." value={form.catatan} onChange={e => set("catatan", e.target.value)} />
+          </div>
+        </div>
+
+        <div style={s.stepRow}><div style={s.stepNum}>3</div><div style={s.stepTxt}>Upload Foto (Opsional)</div></div>
+        <div style={s.card}>
+          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 14 }}>
+            <UploadZone title="🖼️ Foto Referensi Desain" badge="Referensi" icon="📁" sub="Contoh desain banner yang kamu suka sebagai referensi gaya/layout" files={refFiles} onUpload={fl => readFiles(fl, setRefFiles)} onClear={() => setRefFiles([])} />
+            <UploadZone title="📷 Foto Produk / Aset Bisnis" badge="Aset" icon="🖼️" sub="Foto produk, logo, atau gambar yang ingin ditampilkan di banner" files={asetFiles} onUpload={fl => readFiles(fl, setAsetFiles)} onClear={() => setAsetFiles([])} />
+          </div>
+          <div style={s.uploadTip}><p style={{ fontSize: 11, color: "#38bdf8", lineHeight: 1.6, margin: 0 }}>💡 <strong>Tips:</strong> Upload foto referensi dan produk, lalu sertakan juga foto tersebut saat paste prompt ke platform AI yang mendukung image input (ChatGPT, Gemini) untuk hasil lebih akurat.</p></div>
+        </div>
+
+        <div style={s.stepRow}><div style={s.stepNum}>4</div><div style={s.stepTxt}>Gaya Visual</div></div>
+        <div style={s.card}>
+          <div style={s.sectionTitle}>🎭 Tema / Mood</div>
+          <div style={s.tagFlex}>{MOODS.map(m => <Chip key={m.val} label={m.label} active={mood === m.val} onClick={() => setMood(m.val)} />)}</div>
+          <hr style={s.glowLine} />
+          <div style={s.sectionTitle}>🎨 Palet Warna Dominan</div>
+          <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>{PALETTES.map(p => <PaletteBtn key={p.val} label={p.label} gradient={p.g} active={palette === p.val} onClick={() => setPalette(p.val)} />)}</div>
+        </div>
+
+        <div style={s.stepRow}><div style={s.stepNum}>5</div><div style={s.stepTxt}>Ukuran & Format Banner</div></div>
+        <div style={s.card}>
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill,minmax(120px,1fr))", gap: 10 }}>{UKURAN.map(u => <UkuranBtn key={u.val} {...u} active={ukuran.val === u.val} onClick={() => setUkuran(u)} />)}</div>
+        </div>
+
+        <div style={s.stepRow}><div style={s.stepNum}>6</div><div style={s.stepTxt}>Target Platform AI</div></div>
+        <div style={s.card}>
+          <div style={{ display: "flex", flexWrap: "wrap", gap: 10 }}>{AI_TOOLS.map(a => <AiBtn key={a.val} {...a} active={aiTool.val === a.val} onClick={() => setAiTool(a)} />)}</div>
+        </div>
+
+        <button style={s.btnGenerate} onClick={generate}>⚡ Generate Prompt Sekarang</button>
+
+        {result && (
+          <div style={{ marginTop: 24 }}>
+            <div style={{ ...s.stepRow, marginTop: 8 }}>
+              <div style={{ ...s.stepNum, background: SUCCESS, color: "#000" }}>✓</div>
+              <div style={s.stepTxt}>Prompt Siap Digunakan!</div>
+            </div>
+            <div style={s.tabs}>
+              <div style={tab === "prompt" ? s.tabActive : s.tab} onClick={() => setTab("prompt")}>🇮🇩 Prompt Banner</div>
+              <div style={tab === "tips" ? s.tabActive : s.tab} onClick={() => setTab("tips")}>💡 Tips Penggunaan</div>
+            </div>
+            {tab === "prompt" && (
+              <>
+                <div style={s.promptBox}>
+                  <textarea id="prompt-output" readOnly value={result.prompt} onFocus={e => e.target.select()}
+                    style={{ ...s.textarea, minHeight: 200, border: "none", background: "transparent", color: TEXT, fontSize: 12, lineHeight: 1.7 }} />
+                </div>
+                <div style={s.copyRow}>
+                  <button style={{ ...s.btnCopy, borderColor: copied ? SUCCESS : BORDER, color: copied ? SUCCESS : TEXT }} onClick={copy}>{copied ? "✅ Tersalin!" : "📋 Copy Prompt"}</button>
+                  <button style={s.btnRegen} onClick={generate}>🔄 Regenerate</button>
+                </div>
+              </>
+            )}
+            {tab === "tips" && (
+              <div style={s.tipsBox}>
+                <p style={{ fontSize: 13, fontWeight: 600, color: TEXT, marginBottom: 10 }}>Tips menggunakan prompt ini di {aiTool.label}:</p>
+                {result.tips.map((tip, i) => <p key={i} style={{ fontSize: 13, color: SUCCESS, lineHeight: 1.7, marginBottom: 5 }}>{i + 1}. {tip}</p>)}
+              </div>
+            )}
+          </div>
+        )}
+      </div>
+
+      <footer style={s.footer}>Dr. Banner AI Prompt Generator &nbsp;·&nbsp; No API Key Required ✅ &nbsp;·&nbsp; Siap Deploy ke GitHub 🚀</footer>
+    </div>
+  );
+}
