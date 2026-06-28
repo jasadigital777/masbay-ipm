@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>MASBAY — AI Prompt Generator</title>
   <!-- Mengimpor Font Google -->
-  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght=400;500;600;700&family=Inter:wght=300;400;500&display=swap">
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Inter:wght@300;400;500&display=swap">
   
   <!-- Memanggil React & Babel via CDN agar bisa menjalankan JSX di HTML biasa -->
   <script src="https://unpkg.com/react@18/umd/react.production.min.js" crossorigin></script>
@@ -177,7 +177,10 @@
 
       let cta = telepon ? `WA: ${telepon}` : "HUBUNGI KAMI SEKARANG";
       if (tujuan.includes("grand opening")) cta = "KUNJUNGI KAMI SEKARANG!";
-      if (tujuan.includes("lowongan")) cta = "DAFTAR SEKARANG!";
+      if (tujuan.includes("lowongan") || tujuan.includes("rekrutmen")) cta = "KIRIM LAMARAN SEKARANG!";
+      if (tujuan.includes("event") || tujuan.includes("bazar") || tujuan.includes("festival")) cta = "IKUTI & MERIAHKANLAH!";
+      if (tujuan.includes("giveaway")) cta = "IKUTI GIVEAWAY SEKARANG!";
+      if (tujuan.includes("testimoni")) cta = "LIHAT BUKTI NYATA!";
 
       let visualEl = elemen || "";
       const bisnisVisuals = {
@@ -279,7 +282,7 @@
       return (
         <div style={s.wrap}>
           <header style={s.header}>
-            <div style={s.logoBadge}>MASBAY</div>
+            <div style={s.logoBadge}>Dr. Banner</div>
             <div><div style={s.h1}>AI Prompt Generator</div><div style={s.sub}>Buat prompt banner bisnis profesional dalam detik</div></div>
             <div style={{ marginLeft: "auto", background: "rgba(61,220,132,0.12)", border: "1px solid rgba(61,220,132,0.3)", color: SUCCESS, fontSize: 11, padding: "4px 10px", borderRadius: 20, fontWeight: 500 }}>✅ Standalone Engine</div>
           </header>
@@ -308,8 +311,30 @@
               <div>
                 <label style={s.fieldLabel}>Tujuan Banner</label>
                 <select style={s.select} value={form.tujuan} onChange={e=>set("tujuan",e.target.value)}>
-                  <option value="promosi branding">Promosi & Branding</option>
-                  <option value="promo khusus">Diskon Khusus</option>
+                  <optgroup label="Pemasaran & Penjualan">
+                    <option value="promosi dan branding bisnis">Promosi & Branding Umum</option>
+                    <option value="promo khusus / diskon kilat">Diskon & Promo Khusus</option>
+                    <option value="peluncuran produk / layanan baru">Launching Produk Baru</option>
+                    <option value="cuci gudang / clearance sale">Cuci Gudang (Clearance Sale)</option>
+                    <option value="katalog produk / menu andalan">Katalog / Menu Utama</option>
+                  </optgroup>
+                  <optgroup label="Acara & Momen Khusus">
+                    <option value="grand opening toko baru">Grand Opening / Pembukaan Toko</option>
+                    <option value="anniversary / perayaan ulang tahun bisnis">Anniversary / Hari Jadi Bisnis</option>
+                    <option value="bazar / pameran / pop-up market">Bazar & Pameran</option>
+                    <option value="event khusus / turnamen / festival">Event / Turnamen / Festival</option>
+                    <option value="promo hari raya / momen musiman">Promo Hari Raya (Lebaran/Natal)</option>
+                    <option value="promo hari besar / libur nasional">Promo Hari Besar (Kemerdekaan/Tahun Baru/Imlek)</option>
+                  </optgroup>
+                  <optgroup label="Interaksi Sosial Media">
+                    <option value="giveaway / kontes berhadiah">Giveaway & Kontes</option>
+                    <option value="testimoni pelanggan / ulasan positif">Testimoni & Review Pelanggan</option>
+                    <option value="edukasi produk / tips & trik bermanfaat">Konten Edukasi / Tips</option>
+                  </optgroup>
+                  <optgroup label="Informasi Internal">
+                    <option value="lowongan kerja / rekrutmen karyawan">Lowongan Kerja (Staff/Team)</option>
+                    <option value="pengumuman operasional / jam buka-tutup">Pengumuman Operasional Toko</option>
+                  </optgroup>
                 </select>
               </div>
             </div>
@@ -353,7 +378,8 @@
                       <textarea readOnly value={result.prompt} style={{ ...s.textarea, minHeight: 180, border:"none", background:"transparent", color:TEXT }} />
                     </div>
                     <div style={s.copyRow}>
-                      <button style={s.btnCopy} onClick={copy}>{copied ? "✅ Tersalin!" : "📋 Copy Prompt"}</button>
+                      <button style={s.btnCopy} onClick={copy}>{copied ? "✅ Tersalin!" : "📋 Copy Prompt"}
+                      </button>
                     </div>
                   </>
                 ) : (
