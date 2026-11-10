@@ -1,403 +1,723 @@
 <!DOCTYPE html>
-<html lang="id">
+<html lang="id" class="dark">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>MASBAY — AI Prompt Generator</title>
-  <!-- Mengimpor Font Google -->
-  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Inter:wght@300;400;500&display=swap">
+  <title>MASBAY — AI Prompt Generator v2.0</title>
   
-  <!-- Memanggil React & Babel via CDN agar bisa menjalankan JSX di HTML biasa -->
+  <!-- Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet">
+  
+  <!-- Font Awesome Icons -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          colors: {
+            brand: '#f5c518',
+            brandHover: '#e5b508',
+            darkbg: '#0b0d12',
+            darkcard: '#141721',
+            darksurface: '#1b1f2e',
+            darkborder: '#23283b',
+          },
+          fontFamily: {
+            sans: ['Inter', 'sans-serif'],
+            heading: ['Space Grotesk', 'sans-serif'],
+          }
+        }
+      }
+    }
+  </script>
+
+  <!-- React & Babel via CDN -->
   <script src="https://unpkg.com/react@18/umd/react.production.min.js" crossorigin></script>
   <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js" crossorigin></script>
   <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
-</head>
-<body>
 
-  <!-- Wadah utama Aplikasi React -->
+  <style>
+    /* Custom scrollbar for output textarea & history */
+    ::-webkit-scrollbar {
+      width: 6px;
+      height: 6px;
+    }
+    ::-webkit-scrollbar-track {
+      background: #0b0d12;
+    }
+    ::-webkit-scrollbar-thumb {
+      background: #23283b;
+      border-radius: 4px;
+    }
+    ::-webkit-scrollbar-thumb:hover {
+      background: #f5c518;
+    }
+  </style>
+</head>
+<body class="bg-darkbg text-slate-200 font-sans antialiased selection:bg-brand selection:text-black min-h-screen flex flex-col">
+
   <div id="root"></div>
 
-  <!-- Script Aplikasi Utama (Konversi dari berkas DrBanner-NoAPI.jsx.tsx kamu) -->
   <script type="text/babel">
-    const { useState, useRef } = React;
+    const { useState, useEffect, useRef } = React;
 
-    const BG = "#0d0f14", SURFACE = "#161920", CARD = "#1e2230", BORDER = "#2a2f45";
-    const ACCENT = "#f5c518", TEXT = "#e8eaf2", MUTED = "#7a7f99", SUCCESS = "#3ddc84";
-
-    const s = {
-      wrap: { background: BG, minHeight: "100vh", fontFamily: "'Inter',sans-serif", color: TEXT },
-      header: { background: "linear-gradient(135deg,#1a1f35,#0d0f14)", borderBottom: `1px solid ${BORDER}`, padding: "16px 20px", display: "flex", alignItems: "center", gap: 12 },
-      logoBadge: { background: ACCENT, color: "#000", fontWeight: 700, fontSize: 12, padding: "5px 10px", borderRadius: 7, letterSpacing: 0.5 },
-      h1: { fontWeight: 700, fontSize: 17, color: TEXT, margin: 0 },
-      sub: { fontSize: 11, color: MUTED, marginTop: 2 },
-      main: { maxWidth: 900, margin: "0 auto", padding: "24px 16px 60px" },
-      stepRow: { display: "flex", alignItems: "center", gap: 10, marginBottom: 12 },
-      stepNum: { background: ACCENT, color: "#000", fontWeight: 700, fontSize: 10, width: 20, height: 20, borderRadius: "50%", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 },
-      stepTxt: { fontWeight: 700, fontSize: 13, color: TEXT, letterSpacing: 0.3 },
-      card: { background: CARD, border: `1px solid ${BORDER}`, borderRadius: 14, padding: "20px", marginBottom: 18 },
-      sectionTitle: { fontSize: 11, fontWeight: 700, color: MUTED, textTransform: "uppercase", letterSpacing: 1, marginBottom: 12 },
-      grid3: { display: "grid", gridTemplateColumns: "repeat(auto-fill,minmax(110px,1fr))", gap: 8 },
-      fieldGrid2: { display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12, marginBottom: 12 },
-      fieldGrid3: { display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 12, marginBottom: 12 },
-      fieldLabel: { fontSize: 11, fontWeight: 500, color: MUTED, textTransform: "uppercase", letterSpacing: 0.4, marginBottom: 5, display: "block" },
-      input: { background: SURFACE, border: `1.5px solid ${BORDER}`, borderRadius: 8, color: TEXT, fontSize: 12, fontFamily: "Inter,sans-serif", padding: "9px 10px", outline: "none", width: "100%", boxSizing: "border-box" },
-      select: { background: SURFACE, border: `1.5px solid ${BORDER}`, borderRadius: 8, color: TEXT, fontSize: 12, fontFamily: "Inter,sans-serif", padding: "9px 10px", outline: "none", width: "100%", boxSizing: "border-box" },
-      textarea: { background: SURFACE, border: `1.5px solid ${BORDER}`, borderRadius: 8, color: TEXT, fontSize: 12, fontFamily: "Inter,sans-serif", padding: "9px 10px", outline: "none", width: "100%", boxSizing: "border-box", resize: "vertical" },
-      tagFlex: { display: "flex", flexWrap: "wrap", gap: 7 },
-      glowLine: { height: 2, background: `linear-gradient(90deg,transparent,${ACCENT},transparent)`, border: "none", margin: "16px 0", opacity: 0.4 },
-      btnGenerate: { width: "100%", background: `linear-gradient(135deg,${ACCENT},#e6a800)`, color: "#000", border: "none", borderRadius: 12, padding: "16px", fontWeight: 700, fontSize: 15, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", gap: 8, letterSpacing: 0.5 },
-      promptBox: { background: SURFACE, border: `1.5px solid ${BORDER}`, borderRadius: 14, padding: 18 },
-      tipsBox: { background: "rgba(61,220,132,0.07)", border: "1px solid rgba(61,220,132,0.25)", borderRadius: 10, padding: "14px 16px" },
-      uploadZone: { border: `2px dashed ${BORDER}`, borderRadius: 12, padding: "18px 14px", textAlign: "center", cursor: "pointer", background: SURFACE, position: "relative", transition: "border-color .2s" },
-      uploadIcon: { fontSize: 26, marginBottom: 6 },
-      uploadTitle: { fontSize: 13, fontWeight: 600, color: TEXT, marginBottom: 4 },
-      uploadSub: { fontSize: 11, color: MUTED, lineHeight: 1.4 },
-      badge: { position: "absolute", top: 7, right: 7, background: "rgba(245,197,24,0.15)", border: "1px solid rgba(245,197,24,0.4)", color: ACCENT, fontSize: 10, fontWeight: 600, padding: "2px 7px", borderRadius: 10 },
-      uploadTip: { background: "rgba(56,189,248,0.07)", border: "1px solid rgba(56,189,248,0.2)", borderRadius: 8, padding: "10px 14px", marginTop: 12 },
-      copyRow: { display: "flex", gap: 10, marginTop: 12, flexWrap: "wrap" },
-      btnCopy: { background: CARD, border: `1.5px solid ${BORDER}`, color: TEXT, borderRadius: 8, padding: "8px 16px", fontSize: 12, fontWeight: 600, cursor: "pointer" },
-      btnRegen: { background: "transparent", border: "1.5px solid #ff4d4d", color: "#ff4d4d", borderRadius: 8, padding: "8px 16px", fontSize: 12, fontWeight: 600, cursor: "pointer" },
-      tabs: { display: "flex", gap: 4, marginBottom: 14, background: SURFACE, border: `1px solid ${BORDER}`, borderRadius: 10, padding: 4 },
-      tab: { flex: 1, textAlign: "center", padding: "7px", borderRadius: 7, fontSize: 12, fontWeight: 600, cursor: "pointer", color: MUTED },
-      tabActive: { flex: 1, textAlign: "center", padding: "7px", borderRadius: 7, fontSize: 12, fontWeight: 600, cursor: "pointer", color: TEXT, background: CARD, border: `1px solid ${BORDER}` },
-      footer: { textAlign: "center", color: MUTED, fontSize: 11, padding: 20, borderTop: `1px solid ${BORDER}` },
-    };
-
-    function Chip({ label, active, onClick, color = "#a78bfa" }) {
-      return <div onClick={onClick} style={{ background: active ? `${color}1e` : SURFACE, border: `1.5px solid ${active ? color : BORDER}`, borderRadius: 20, padding: "6px 13px", fontSize: 12, cursor: "pointer", color: active ? color : TEXT, transition: "all .18s", userSelect: "none" }}>{label}</div>;
-    }
-    function BisnisBtn({ icon, label, active, onClick }) {
-      return <div onClick={onClick} style={{ background: active ? "rgba(245,197,24,0.10)" : SURFACE, border: `1.5px solid ${active ? ACCENT : BORDER}`, borderRadius: 10, padding: "11px 7px", textAlign: "center", cursor: "pointer", color: active ? ACCENT : TEXT, fontSize: 11, fontWeight: 500, userSelect: "none" }}><div style={{ fontSize: 20, marginBottom: 5 }}>{icon}</div>{label}</div>;
-    }
-    function PaletteBtn({ label, gradient, active, onClick }) {
-      return <div onClick={onClick} style={{ display: "flex", alignItems: "center", gap: 7, background: active ? "rgba(245,197,24,0.08)" : SURFACE, border: `1.5px solid ${active ? ACCENT : BORDER}`, borderRadius: 8, padding: "6px 11px", cursor: "pointer", fontSize: 11, color: TEXT, userSelect: "none" }}><div style={{ width: 26, height: 16, borderRadius: 4, background: gradient, flexShrink: 0 }} />{label}</div>;
-    }
-    function UkuranBtn({ label, sub, w, h, active, onClick }) {
-      return <div onClick={onClick} style={{ background: active ? "rgba(245,197,24,0.08)" : SURFACE, border: `1.5px solid ${active ? ACCENT : BORDER}`, borderRadius: 10, padding: "12px 8px", textAlign: "center", cursor: "pointer", color: TEXT, userSelect: "none" }}><div style={{ width: w, height: h, background: BORDER, borderRadius: 3, margin: "0 auto 7px" }} /><div style={{ fontSize: 11, fontWeight: 600 }}>{label}</div><div style={{ fontSize: 10, color: MUTED, marginTop: 2 }}>{sub}</div></div>;
-    }
-    function AiBtn({ icon, label, active, onClick }) {
-      return <div onClick={onClick} style={{ background: active ? "rgba(56,189,248,0.12)" : SURFACE, border: `1.5px solid ${active ? "#38bdf8" : BORDER}`, borderRadius: 20, padding: "8px 16px", fontSize: 13, fontWeight: 600, cursor: "pointer", color: active ? "#38bdf8" : TEXT, display: "flex", alignItems: "center", gap: 7, userSelect: "none" }}>{icon} {label}</div>;
-    }
-
+    // Data Constants
     const BISNIS = [
-      { icon: "🏍️", label: "Bengkel Motor", val: "bengkel motor / otomotif", desc: "servis motor, ganti oli, tune up, tambal ban" },
-      { icon: "👕", label: "Laundry", val: "laundry kiloan / pakaian", desc: "cuci kiloan, cuci satuan, setrika, antar jemput" },
-      { icon: "🍗", label: "Kuliner", val: "kuliner / warung makan / restoran", desc: "makanan lezat, menu spesial, masakan nusantara" },
-      { icon: "🧋", label: "Minuman/Cafe", val: "minuman kekinian / cafe / kedai kopi", desc: "minuman segar, kopi, teh, boba, juice" },
-      { icon: "✂️", label: "Barbershop", val: "barbershop / salon rambut", desc: "potong rambut, cukur jenggot, perawatan rambut pria" },
-      { icon: "👗", label: "Fashion", val: "toko fashion / clothing / pakaian", desc: "pakaian trendy, outfit kekinian, koleksi terbaru" },
-      { icon: "📱", label: "Elektronik", val: "toko elektronik / gadget / handphone", desc: "gadget terlengkap, handphone, aksesoris, service" },
-      { icon: "🏠", label: "Properti", val: "properti / kos-kosan / kontrakan", desc: "hunian nyaman, strategis, fasilitas lengkap" },
-      { icon: "💄", label: "Kecantikan", val: "klinik kecantikan / skincare / salon", desc: "perawatan wajah, skincare, kecantikan profesional" },
-      { icon: "🎉", label: "Event/Wedding", val: "event organizer / wedding organizer", desc: "dekorasi elegan, paket lengkap, momen tak terlupakan" },
-      { icon: "📚", label: "Kursus/Bimbel", val: "jasa pendidikan / kursus / bimbel", desc: "belajar menyenangkan, tentor berpengalaman, hasil terjamin" },
-      { icon: "💊", label: "Apotek", val: "apotek / toko obat / health store", desc: "obat lengkap, suplemen, alat kesehatan, konsultasi" },
-      { icon: "🛒", label: "Sembako/Mini", val: "toko sembako / minimarket lokal", desc: "kebutuhan sehari-hari, harga terjangkau, lengkap" },
-      { icon: "📦", label: "Ekspedisi", val: "jasa ekspedisi / pengiriman / kurir", desc: "pengiriman cepat, aman, terpercaya, harga bersaing" },
-      { icon: "🏗️", label: "Material", val: "toko material bangunan / interior", desc: "material bangunan lengkap, kualitas terjamin, harga grosir" },
-      { icon: "📸", label: "Studio/Cetak", val: "studio foto / percetakan / desain grafis", desc: "cetak berkualitas, desain profesional, hasil tajam" },
-      { icon: "✈️", label: "Travel/Wisata", val: "travel / wisata / tour and travel", desc: "paket wisata terbaik, perjalanan nyaman, harga terjangkau" },
-      { icon: "🌾", label: "Agribisnis", val: "usaha ternak / pertanian / agribisnis", desc: "produk segar alami, langsung dari sumber, berkualitas" },
-      { icon: "🔧", label: "Service/Reparasi", val: "jasa reparasi / service elektronik", desc: "servis profesional, cepat, bergaransi, berpengalaman" },
-      { icon: "🧹", label: "Cleaning", val: "jasa kebersihan / cleaning service", desc: "bersih maksimal, tim profesional, peralatan modern" },
-      { icon: "💪", label: "Gym/Fitness", val: "gym / fitness center / olahraga", desc: "peralatan lengkap, trainer berpengalaman, hasil nyata" },
-      { icon: "🔧", label: "Lainnya", val: "bisnis umum / UMKM", desc: "usaha kreatif, produk berkualitas, layanan terbaik" }
+      { id: "bengkel", icon: "🏍️", label: "Bengkel Motor", val: "bengkel motor / otomotif", visualEn: "realistic motorcycle engine closeup, polished chrome mechanical parts, mechanic tools, dramatic workshop lighting", sampleName: "Bengkel Motor Masbay", sampleTag: "Servis Cepat, Presisi & Bergaransi", samplePromo: "DISKON 20% SERVIS TOTAL", sampleHarga: "Mulai Rp 25.000" },
+      { id: "laundry", icon: "👕", label: "Laundry", val: "laundry kiloan / pakaian", visualEn: "stack of fresh fluffy folded laundry, clean washing machine bubbles, bright fresh fabric texture, soft detergent aroma vibe", sampleName: "Masbay Clean Laundry", sampleTag: "Wangi, Rapi, Antar Jemput", samplePromo: "CUCI 5KG GRATIS 1KG", sampleHarga: "Rp 6.000 / kg" },
+      { id: "kuliner", icon: "🍗", label: "Kuliner", val: "warung makan / restoran kuliner", visualEn: "steaming hot delicious Indonesian traditional dish closeup, fresh herbs garnish, studio food photography, mouth-watering lighting", sampleName: "Ayam Goreng Masbay", sampleTag: "Sambal Mantap Rasa Sambel Desa", samplePromo: "PAKET HEMAT KENYANG", sampleHarga: "Porsi Mulai 15rb" },
+      { id: "cafe", icon: "🧋", label: "Minuman / Cafe", val: "kedai kopi / cafe kekinian", visualEn: "iced artisan boba milk tea and espresso glass with condensation drops, roasted coffee beans background, cozy ambient café glow", sampleName: "Masbay Coffee & Eatery", sampleTag: "Tempat Nongkrong Kopi Kekinian", samplePromo: "BUY 1 GET 1 FREE KOPI SUSU", sampleHarga: "Mulai Rp 15.000" },
+      { id: "barber", icon: "✂️", label: "Barbershop", val: "barbershop / salon pria", visualEn: "vintage hair clippers, razor blade, sharp scissors, sleek leather barber chair in background, moody warm wood aesthetic", sampleName: "Masbay Gentleman Barber", sampleTag: "Potong Haircut Modern & Massage", samplePromo: "PAKET CUKUR + WASH 30K", sampleHarga: "Rp 30.000" },
+      { id: "fashion", icon: "👗", label: "Fashion", val: "toko fashion / distro", visualEn: "modern stylish streetwear clothing flat lay arrangement, premium cotton fabric texture, aesthetic minimalist studio setup", sampleName: "Masbay Apparel Co.", sampleTag: "Outfit Trendy Anak Muda Surakarta", samplePromo: "CLEARANCE SALE DISKON 50%", sampleHarga: "Mulai 50rb" },
+      { id: "elektronik", icon: "📱", label: "Elektronik / HP", val: "toko gadget / service HP", visualEn: "latest flagship smartphone mockup, glowing blue circuit neon accents, high-tech repair precision tools desk", sampleName: "Masbay Cell & Repair", sampleTag: "Spesialis Ganti LCD & Battery", samplePromo: "BONUS TEMPERED GLASS", sampleHarga: "Bisa Ditunggu" },
+      { id: "properti", icon: "🏠", label: "Properti / Kos", val: "properti / kos-kosan eksklusif", visualEn: "modern minimalist house exterior design, warm sunset architectural lighting, cozy tropical landscaping", sampleName: "Kos Masbay Eksklusif", sampleTag: "Fasilitas AC, Wi-Fi & Kamar Mandi Dalam", samplePromo: "DISKON SEWA BULAN PERTAMA", sampleHarga: "Rp 1.2jt / bulan" },
+      { id: "kecantikan", icon: "💄", label: "Kecantikan", val: "klinik kecantikan / skincare", visualEn: "aesthetic glowing skincare bottles, pastel flowers background, soft luxury spa lighting, pristine marble surface", sampleName: "Masbay Glow Beauty", sampleTag: "Perawatan Wajah Glowing Instant", samplePromo: "FACIAL GLOWING DISKON 30%", sampleHarga: "Mulai 99rb" },
+      { id: "event", icon: "🎉", label: "Event / WO", val: "wedding & event organizer", visualEn: "luxurious floral wedding decoration, fairy lights bokeh, elegant ballroom setup, romantic golden glow", sampleName: "Masbay Wedding Planner", sampleTag: "Wujudkan Pernikahan Impianmu", samplePromo: "FREE DEKORASI AKAD NIKAH", sampleHarga: "Paket Hemat 2026" },
+      { id: "sembako", icon: "🛒", label: "Sembako / Mini", val: "toko sembako / minimarket", visualEn: "neatly organized grocery shelves, fresh fruits and daily goods display, bright welcoming retail shop lighting", sampleName: "Toko Sembako Masbay", sampleTag: "Lengkap, Murah, Melayani Grosir", samplePromo: "PROMO MINYAK GORENG MURAH", sampleHarga: "Harga Agen" },
+      { id: "otomotif", icon: "🚗", label: "Cuci Mobil/Detailing", val: "jasa auto detailing / cuci mobil", visualEn: "glistening wet luxury sports car closeup, high-pressure foam wash bubbles, glossy paint shine reflection", sampleName: "Masbay Auto Care", sampleTag: "Cuci Salju & Nano Ceramic Coating", samplePromo: "PAKET KILAT KINCLONG", sampleHarga: "Rp 40.000" }
     ];
 
     const MOODS = [
-      { label: "⚡ Bold & Edgy", val: "bold aggressive dark dramatic high contrast striking", layout: "dynamic asymmetric layout with strong diagonal lines" },
-      { label: "🧊 Clean Modern", val: "clean professional minimalist modern sleek whitespace", layout: "clean grid layout with generous whitespace and sharp edges" },
-      { label: "🌈 Colorful Warm", val: "warm bright colorful cheerful playful energetic", layout: "vibrant playful layout with rounded shapes and fun elements" },
-      { label: "✨ Luxury Premium", val: "luxury premium elegant dark gold sophisticated exclusive", layout: "elegant centered layout with fine gold lines and premium spacing" },
-      { label: "🌿 Natural / Eco", val: "natural organic fresh green earthy botanical eco-friendly", layout: "organic flowing layout with leaf and nature-inspired shapes" },
-      { label: "🍽️ Food Vibes", val: "food photography vibrant appetizing culinary", layout: "mouth-watering close-up food photography as hero background" },
-      { label: "🔮 Tech / Futuristik", val: "tech futuristic neon cyber glow hi-tech digital", layout: "sci-fi grid with glowing neon lines and hexagonal patterns" },
-      { label: "📻 Retro / Vintage", val: "retro vintage classic nostalgic old-school grunge", layout: "vintage badge layout with distressed textures and retro fonts" },
-      { label: "🌸 Kawaii / Cute", val: "kawaii cute pastel soft feminine sweet aesthetic", layout: "soft pastel layout with cute icons and rounded kawaii elements" },
-      { label: "🕌 Islami / Religi", val: "islamic religious arabesque ornamental spiritual halal", layout: "arabesque geometric pattern border with centered calligraphy" },
-      { label: "🏃 Sporty / Dinamis", val: "sporty dynamic action athletic motion energy", layout: "dynamic speed lines layout with bold athletic typography" },
-      { label: "🎯 Flat Design", val: "flat design vector illustration simple icon-based", layout: "flat vector layout with bold icons and simple geometric shapes" },
-      { label: "📦 3D / Realistik", val: "3D realistic render product mockup dimensional shadow", layout: "3D product mockup centered with realistic drop shadows" },
-      { label: "🌊 Gradient Pop", val: "gradient colorful vivid neon pop rainbow holographic", layout: "full-bleed gradient background with holographic accents" },
-      { label: "🎬 Cinematic Dark", val: "dark moody cinematic dramatic shadow noir mysterious", layout: "cinematic widescreen layout with dramatic lighting and fog" },
-      { label: "🪵 Rustic / Artisan", val: "rustic handmade artisan craft woodgrain texture earthy", layout: "rustic wood texture background with handcrafted badge overlay" }
+      { id: "bold", label: "⚡ Bold & Edgy", val: "bold aggressive dark dramatic high-contrast striking", layoutEn: "dynamic asymmetric layout with strong diagonal contrast lines and sharp edgy accents" },
+      { id: "clean", label: "🧊 Clean Modern", val: "clean professional minimalist modern sleek whitespace", layoutEn: "clean structured grid layout with generous whitespace and ultra-crisp edges" },
+      { id: "luxury", label: "✨ Premium Gold", val: "luxury premium elegant dark gold sophisticated exclusive", layoutEn: "elegant centered visual hierarchy with fine gold geometric borders and subtle metallic shimmer" },
+      { id: "neon", label: "🌈 Neon Cyber", val: "tech futuristic neon cyber glow hi-tech digital", layoutEn: "glowing cyan and magenta digital grid lines with dark cybernetic background motifs" },
+      { id: "warm", label: "☀️ Warm & Playful", val: "vibrant friendly cheerful warm energetic colorful", layoutEn: "playful composition with rounded badge containers and energetic splash graphics" },
+      { id: "food", label: "🍽️ Culinary Feast", val: "mouth-watering appetizing warm lighting gourmet", layoutEn: "dramatic food hero composition with steam overlays and warm appetising focus" },
+      { id: "retro", label: "📻 Retro Vintage", val: "retro vintage classic nostalgic badge texture", layoutEn: "vintage emblem layout with subtle noise texture and classic retro framing" },
+      { id: "islami", label: "🕌 Religi & Islami", val: "islamic religious ornament spiritual halal elegant", layoutEn: "arabesque geometric frame border with clean centered title block" }
     ];
 
     const PALETTES = [
-      { label: "Merah & Hitam", val: "dominant red (#CC0000) and black (#0A0A0A), with white (#FFFFFF) accent text", g: "linear-gradient(90deg,#ff2222,#111)" },
-      { label: "Biru & Putih", val: "dominant blue (#1565C0) and white (#FFFFFF), with light sky blue (#E3F2FD) accent", g: "linear-gradient(90deg,#1a7fe8,#fff)" },
-      { label: "Hijau & Putih", val: "dominant green (#2E7D32) and white (#FFFFFF), with mint (#E8F5E9) accent", g: "linear-gradient(90deg,#1da350,#fff)" },
-      { label: "Hitam & Gold", val: "dominant black (#0A0A0A) and gold (#F5C518), with warm white (#FFF8E1) accent", g: "linear-gradient(90deg,#111,#f5c518)" },
-      { label: "Orange & Coklat", val: "dominant orange (#E65100) and dark brown (#3E2723), with cream (#FFF8E1) accent", g: "linear-gradient(90deg,#ff6b00,#2a1200)" },
-      { label: "Ungu & Pink", val: "dominant purple (#6A1B9A) and hot pink (#EC407A), with light lavender (#F3E5F5) accent", g: "linear-gradient(90deg,#7c3aed,#ec4899)" },
-      { label: "Kuning & Hitam", val: "dominant yellow (#F9A825) and black (#0A0A0A), with white (#FFFFFF) accent", g: "linear-gradient(90deg,#f5c518,#111)" },
-      { label: "Teal & Putih", val: "dominant teal (#00695C) and white (#FFFFFF), with light cyan (#E0F2F1) accent", g: "linear-gradient(90deg,#0d9488,#fff)" },
-      { label: "Merah, Kuning & Putih", val: "dominant red (#D32F2F), yellow (#FDD835), and white (#FFFFFF)", g: "linear-gradient(90deg,#ef4444,#facc15,#fff)" },
-      { label: "Navy & Biru Langit", val: "dominant dark navy (#0D1B2A) and sky blue (#38BDF8), with white (#FFFFFF) accent", g: "linear-gradient(90deg,#1e3a5f,#38bdf8,#fff)" },
-      { label: "Pink & Krem", val: "dominant soft pink (#F48FB1) and cream (#FDF2F8), with rose white (#FFF0F5) accent", g: "linear-gradient(90deg,#f472b6,#fdf2f8)" },
-      { label: "Coklat & Krem", val: "dominant brown (#5D4037) and cream (#FEF3C7), with warm beige (#FFF8EF) accent", g: "linear-gradient(90deg,#92400e,#fef3c7)" },
-      { label: "Putih & Silver", val: "dominant white (#FFFFFF), silver (#B0BEC5), and light grey (#ECEFF1)", g: "linear-gradient(90deg,#fff,#94a3b8,#e2e8f0)" },
-      { label: "Merah Tua & Krem", val: "dominant deep maroon (#7F1D1D) and cream (#FEF9EF), with off-white (#FFFBF5) accent", g: "linear-gradient(90deg,#7f1d1d,#fef9ef)" },
-      { label: "Hijau Neon & Hitam", val: "dominant neon green (#00E676) and near-black (#0A0A0A), with dark grey (#1A1A1A) accent", g: "linear-gradient(90deg,#22c55e,#0a0a0a)" },
-      { label: "Indigo & Lavender", val: "dominant indigo (#3730A3) and light lavender (#E0E7FF), with white (#FFFFFF) accent", g: "linear-gradient(90deg,#4f46e5,#e0e7ff)" },
-      { label: "Hijau Emerald & Gold", val: "dominant emerald green (#064E3B) and gold (#F5C518), with cream (#FFFBEB) accent", g: "linear-gradient(90deg,#065f46,#f5c518)" },
-      { label: "Orange & Kuning Gradient", val: "warm orange (#F97316) to yellow (#FBBF24) gradient, with white (#FFFFFF) text accent", g: "linear-gradient(90deg,#f97316,#fbbf24)" }
+      { id: "p1", label: "Merah & Hitam", val: "dominant crimson red (#D32F2F) and deep black (#0A0A0A), contrast white text", bg: "from-red-600 to-black", textCol: "#ffffff", accentCol: "#ef4444" },
+      { id: "p2", label: "Biru & Putih", val: "dominant navy blue (#0D47A1) and crisp white (#FFFFFF), sky blue accent", bg: "from-blue-600 to-slate-950", textCol: "#ffffff", accentCol: "#38bdf8" },
+      { id: "p3", label: "Hitam & Gold", val: "dominant pitch black (#0A0A0A) and metallic gold (#F5C518), elegant warm accent", bg: "from-amber-500 via-neutral-900 to-black", textCol: "#f5c518", accentCol: "#f5c518" },
+      { id: "p4", label: "Hijau & Putih", val: "dominant emerald green (#1B5E20) and fresh white (#FFFFFF), mint accent", bg: "from-emerald-600 to-slate-950", textCol: "#ffffff", accentCol: "#34d399" },
+      { id: "p5", label: "Kuning & Hitam", val: "dominant vivid yellow (#FACC15) and dark black (#0F172A), high impact contrast", bg: "from-yellow-400 to-black", textCol: "#facc15", accentCol: "#facc15" },
+      { id: "p6", label: "Orange & Coklat", val: "dominant warm orange (#EA580C) and espresso brown (#27150C), cream accent", bg: "from-orange-600 to-stone-900", textCol: "#ffffff", accentCol: "#fb923c" },
+      { id: "p7", label: "Ungu & Pink", val: "dominant vibrant purple (#7E22CE) and hot pink (#EC4899), lavender text", bg: "from-purple-700 to-pink-600", textCol: "#ffffff", accentCol: "#f472b6" },
+      { id: "p8", label: "Neon Green & Dark", val: "dominant neon green (#22C55E) and deep dark grey (#111827), cyber white accent", bg: "from-green-500 via-emerald-950 to-black", textCol: "#22c55e", accentCol: "#4ade80" }
     ];
 
     const UKURAN = [
-      { label: "Landscape", sub: "16:9 — FB Cover", ar: "16:9", val: "landscape horizontal banner 16:9 ratio (1920x1080px)", w: 54, h: 30 },
-      { label: "Square", sub: "1:1 — IG Feed", ar: "1:1", val: "square social media post 1:1 ratio (1080x1080px)", w: 34, h: 34 },
-      { label: "Portrait", sub: "9:16 — IG Story", ar: "9:16", val: "portrait vertical story 9:16 ratio (1080x1920px)", w: 22, h: 40 },
-      { label: "Billboard", sub: "4:1 — Spanduk", ar: "4:1", val: "wide horizontal billboard 4:1 ratio (4000x1000px)", w: 62, h: 15 },
-      { label: "A4 Flyer", sub: "3:4 — Print", ar: "3:4", val: "A4 portrait flyer print 3:4 ratio (2480x3508px)", w: 27, h: 36 },
-      { label: "X-Banner", sub: "1:2 — Standing", ar: "1:2", val: "X-banner roll up standing display 1:2 ratio (600x1600px)", w: 19, h: 38 }
+      { id: "landscape", label: "Landscape", sub: "16:9 — FB / Spanduk", ar: "16:9", cssAspect: "aspect-[16/9]" },
+      { id: "square", label: "Square", sub: "1:1 — IG Feed", ar: "1:1", cssAspect: "aspect-square" },
+      { id: "portrait", label: "Portrait", sub: "9:16 — IG Story / Reels", ar: "9:16", cssAspect: "aspect-[9/16]" },
+      { id: "billboard", label: "Billboard", sub: "4:1 — Banner Panjang", ar: "4:1", cssAspect: "aspect-[4/1]" },
+      { id: "flyer", label: "Flyer A4", sub: "3:4 — Cetak Broshur", ar: "3:4", cssAspect: "aspect-[3/4]" },
+      { id: "xbanner", label: "X-Banner", sub: "1:2 — Roll Up Display", ar: "1:2", cssAspect: "aspect-[1/2]" }
     ];
 
     const AI_TOOLS = [
-      { icon: "🤖", label: "ChatGPT", val: "ChatGPT / DALL-E", tips: ["Buka ChatGPT lalu aktifkan fitur Image Generation (ikon gambar)", "Paste prompt langsung di kolom chat tanpa perlu edit", "Minta variasi: ketik 'buat 4 variasi berbeda dari prompt ini'", "Untuk revisi warna: 'ubah warna utama menjadi biru tua dan emas'"] },
-      { icon: "♊", label: "Gemini", val: "Gemini (Google)", tips: ["Buka gemini.google.com → pastikan pakai Gemini Advanced", "Aktifkan Imagen dari menu tools/ekstensi jika belum aktif", "Paste prompt, tambahkan: 'buat dalam resolusi tinggi'", "Tersedia juga di Google Workspace dan aplikasi Gemini di HP"] },
-      { icon: "🎨", label: "Canva AI", val: "Canva AI (Magic Media)", tips: ["Buka Canva → klik Apps → cari Magic Media atau Text to Image", "Pilih ratio kanvas sesuai ukuran banner sebelum generate", "Paste prompt di kolom, pilih style 'Photo' atau 'Illustration'", "Hasil langsung bisa diedit di Canva tanpa keluar aplikasi"] },
-      { icon: "💫", label: "Dreamina", val: "Dreamina (CapCut AI)", tips: ["Buka app Dreamina atau fitur AI Image di CapCut", "Pilih 'Text to Image' lalu paste prompt di kolom yang tersedia", "Pilih ratio sesuai banner: 16:9, 1:1, 9:16, dst", "Hasil bisa langsung dipakai untuk konten sosial media"] }
+      { id: "ideogram", name: "Ideogram 2.0", tag: "--style typography --v 2.0", note: "Recommended: Sangat akurat dalam merender susunan tata letak teks & ejaan Bahasa Indonesia." },
+      { id: "midjourney", name: "Midjourney v6", tag: "--ar {AR} --v 6.0 --style raw", note: "Visual paling estetik & foto-realistis. Gunakan prompt singkat untuk teks." },
+      { id: "flux", name: "Flux.1 (Dev)", tag: "aspect ratio {AR}, ultra sharp typography details", note: "Model open-source terkuat untuk rendering detail objek visual & pencahayaan." },
+      { id: "dalle", name: "DALL-E 3 (ChatGPT)", tag: "Create banner design in {AR} aspect ratio with clean typography rendering.", note: "Mudah dipakai langsung melalui obrolan ChatGPT Plus/Enterprise." }
     ];
 
-    function generatePrompt(form, bisnis, bisnisObj, mood, moodObj, palette, ukuran, aiTool) {
-      const nama = form.nama.trim() || bisnisObj.val;
-      const tagline = form.tagline.trim();
-      const produk = form.produk.trim() || bisnisObj.desc;
-      const promo = form.promo.trim();
-      const harga = form.harga.trim();
-      const telepon = form.telepon.trim();
-      const alamat = form.alamat.trim();
-      const sosmed = form.sosmed.trim();
-      const elemen = form.elemen.trim();
-      const tujuan = form.tujuan;
-
-      let headline = promo ? promo.toUpperCase() : (tagline ? tagline.toUpperCase() : "TERPERCAYA & PROFESIONAL");
-      let subHeadline = tagline && promo ? tagline : (produk ? `${produk.split(",")[0]}` : bisnisObj.desc);
-
-      let cta = telepon ? `WA: ${telepon}` : "HUBUNGI KAMI SEKARANG";
-      if (tujuan.includes("grand opening")) cta = "KUNJUNGI KAMI SEKARANG!";
-      if (tujuan.includes("lowongan") || tujuan.includes("rekrutmen")) cta = "KIRIM LAMARAN SEKARANG!";
-      if (tujuan.includes("event") || tujuan.includes("bazar") || tujuan.includes("festival")) cta = "IKUTI & MERIAHKANLAH!";
-      if (tujuan.includes("giveaway")) cta = "IKUTI GIVEAWAY SEKARANG!";
-      if (tujuan.includes("testimoni")) cta = "LIHAT BUKTI NYATA!";
-
-      let visualEl = elemen || "";
-      const bisnisVisuals = {
-        "bengkel motor": "realistic motorcycle closeup, chrome engine parts, mechanic tools, oil drops",
-        "laundry": "fluffy white clean clothes, washing machine bubbles, fresh fabric texture",
-        "kuliner": "steaming hot delicious food close-up, fresh ingredients, plate styling",
-        "minuman": "colorful cold drink with ice, condensation drops, fresh fruit garnish",
-        "barbershop": "razor blade, scissors, comb, hair styling tools, sharp clean look",
-        "fashion": "stylish clothing flat lay, fabric texture, trendy outfit arrangement",
-        "elektronik": "modern gadgets, smartphone, LED light glow, tech circuit patterns"
-      };
-      const matchKey = Object.keys(bisnisVisuals).find(k => bisnis.toLowerCase().includes(k));
-      if (!visualEl) visualEl = matchKey ? bisnisVisuals[matchKey] : "relevant business product or service visual, professional setting";
-
-      const layout = moodObj?.layout || "balanced centered layout with clear visual hierarchy";
-
-      let textSection = `\n\nTEKS PADA BANNER (susun dengan hierarki visual yang jelas):\n`;
-      textSection += `• HEADLINE UTAMA (font besar, bold, kontras tinggi): "${headline}"\n`;
-      textSection += `• Nama Bisnis (font medium, eyecatching): "${nama}"\n`;
-      if (subHeadline) textSection += `• Sub-headline (font lebih kecil): "${subHeadline}"\n`;
-      if (harga) textSection += `• Badge Harga (kotak highlight, eye-catching): "${harga}"\n`;
-      textSection += `• CTA Button (tombol mencolok, kontras): "${cta}"\n`;
-      if (sosmed) textSection += `• Info Kontak: "${sosmed}"\n`;
-      if (alamat) textSection += `• Alamat singkat: "${alamat}"\n`;
-
-      let prompt = `Desain banner ${tujuan} untuk bisnis "${nama}" yang bergerak di bidang ${bisnis}.\n\n`;
-      prompt += `FORMAT & UKURAN: ${ukuran.val}.\n\n`;
-      prompt += `GAYA VISUAL: ${moodObj?.val || mood}. ${layout}.\n\n`;
-      prompt += `PALET WARNA: ${palette}.\n\n`;
-      prompt += `ELEMEN VISUAL UTAMA: ${visualEl}.\n\n`;
-      prompt += `KOMPOSISI & LAYOUT: ${layout}.\n\n`;
-      prompt += `TIPOGRAFI: Pilih font yang sesuai dengan gaya ${moodObj?.val?.split(" ")[0] || "modern"}.`;
-      prompt += textSection;
-      
-      return prompt;
-    }
-
-    function UploadZone({ title, badge, icon, sub, files, onUpload, onClear }) {
-      const ref = useRef();
-      const hasFile = files.length > 0;
-      return (
-        <div>
-          <div style={{ ...s.sectionTitle, marginBottom: 8 }}>{title}</div>
-          <div onClick={() => ref.current.click()} style={{ ...s.uploadZone, borderColor: hasFile ? SUCCESS : BORDER, borderStyle: hasFile ? "solid" : "dashed" }}>
-            <div style={s.badge}>{badge}</div>
-            <input ref={ref} type="file" accept="image/*" multiple style={{ display: "none" }} onChange={e => onUpload(e.target.files)} />
-            {files.length === 0 ? (<><div style={s.uploadIcon}>{icon}</div><div style={s.uploadTitle}>Klik untuk upload</div><div style={s.uploadSub}>{sub}</div></>) : (
-              <><div style={{ display: "flex", flexWrap: "wrap", gap: 5, justifyContent: "center", marginBottom: 8 }}>{files.slice(0, 4).map((f, i) => <img key={i} src={f.preview} alt="" style={{ width: 52, height: 52, objectFit: "cover", borderRadius: 6, border: `1.5px solid ${BORDER}` }} />)}</div>
-              <div style={{ fontSize: 11, color: SUCCESS, fontWeight: 600, marginBottom: 6 }}>{files.length} foto terpilih ✓</div>
-              <div onClick={e => { e.stopPropagation(); onClear(); }} style={{ background: "rgba(255,77,77,0.12)", border: "1px solid rgba(255,77,77,0.3)", color: "#ff4d4d", fontSize: 11, padding: "4px 10px", borderRadius: 8, cursor: "pointer", display: "inline-block", fontWeight: 600 }}>✕ Hapus</div></>
-            )}
-          </div>
-        </div>
-      );
-    }
+    const PRESETS = [
+      { name: "Kopi Susu Kekinian", bisnisId: "cafe", moodId: "bold", paletteId: "p3", ratioId: "square", engineId: "ideogram", nama: "Masbay Coffee", tagline: "Kopi Susu Gula Aren Asli", promo: "BUY 1 GET 1 FREE", harga: "Rp 15.000", telepon: "0812-9900-1122", alamat: "Jl. Pemuda No. 8, Surakarta" },
+      { name: "Bengkel Motor Kilat", bisnisId: "bengkel", moodId: "bold", paletteId: "p1", ratioId: "landscape", engineId: "ideogram", nama: "Bengkel Masbay Speed", tagline: "Spesialis Tune Up & Ganti Oli", promo: "GRATIS CEK REM & AKI", harga: "Paket Servis 35K", telepon: "0857-4433-2211", alamat: "Kawasan Jebres, Surakarta" },
+      { name: "Laundry Kiloan Bersih", bisnisId: "laundry", moodId: "clean", paletteId: "p2", ratioId: "landscape", engineId: "flux", nama: "Masbay Clean Express", tagline: "Cuci, Setrika & Antar Jemput", promo: "PAKET HEMAT MINGGUAN", harga: "Rp 6.000 / kg", telepon: "0813-1122-3344", alamat: "Jl. Universitas No. 12" },
+      { name: "Barbershop Luxury", bisnisId: "barber", moodId: "luxury", paletteId: "p3", ratioId: "portrait", engineId: "midjourney", nama: "Masbay Executive Cuts", tagline: "Premium Haircut & Hot Towel Shave", promo: "SPECIAL DISCOUNT 25%", harga: "Rp 45.000", telepon: "0821-7788-9900", alamat: "Center Point Plaza Lt. 1" }
+    ];
 
     function App() {
-      const [bisnis, setBisnis] = useState("bengkel motor / otomotif");
-      const [mood, setMood] = useState(MOODS[0].val);
-      const [palette, setPalette] = useState(PALETTES[0].val);
+      const [bisnis, setBisnis] = useState(BISNIS[3]); // Default Cafe
+      const [mood, setMood] = useState(MOODS[0]);
+      const [palette, setPalette] = useState(PALETTES[2]); // Black & Gold
       const [ukuran, setUkuran] = useState(UKURAN[0]);
       const [aiTool, setAiTool] = useState(AI_TOOLS[0]);
-      const [tab, setTab] = useState("prompt");
-      const [result, setResult] = useState(null);
-      const [copied, setCopied] = useState(false);
-      const [refFiles, setRefFiles] = useState([]);
-      const [asetFiles, setAsetFiles] = useState([]);
-      const [form, setForm] = useState({ nama: "", tagline: "", produk: "", promo: "", harga: "", telepon: "", alamat: "", sosmed: "", jam: "", target: "", usp: "", elemen: "", catatan: "", tujuan: "promosi dan branding bisnis" });
-      const set = (k, v) => setForm(f => ({ ...f, [k]: v }));
+      
+      const [form, setForm] = useState({
+        nama: "Masbay Coffee & Eatery",
+        tagline: "Tempat Nongkrong Kopi Kekinian",
+        promo: "BUY 1 GET 1 FREE KOPI SUSU",
+        harga: "Mulai Rp 15.000",
+        telepon: "0857-9900-1122",
+        alamat: "Kawasan Jebres, Surakarta",
+        catatanKhusus: "Gelas transparan dengan embun dingin, biji kopi roasting sangrai di latar belakang"
+      });
 
-      const readFiles = (fileList, setter) => {
-        const arr = [];
-        let done = 0;
-        Array.from(fileList).forEach(file => {
-          const reader = new FileReader();
-          reader.onload = e => { arr.push({ name: file.name, preview: e.target.result }); done++; if (done === fileList.length) setter([...arr]); };
-          reader.readAsDataURL(file);
+      const [resultPrompt, setResultPrompt] = useState("");
+      const [activeTab, setActiveTab] = useState("full");
+      const [copied, setCopied] = useState(false);
+      const [history, setHistory] = useState([]);
+      const [showMockupModal, setShowMockupModal] = useState(false);
+
+      const updateField = (k, v) => {
+        setForm(prev => ({ ...prev, [k]: v }));
+      };
+
+      // Load sample preset
+      const applyPreset = (preset) => {
+        const foundBisnis = BISNIS.find(b => b.id === preset.bisnisId) || BISNIS[0];
+        const foundMood = MOODS.find(m => m.id === preset.moodId) || MOODS[0];
+        const foundPalette = PALETTES.find(p => p.id === preset.paletteId) || PALETTES[0];
+        const foundUkuran = UKURAN.find(u => u.id === preset.ratioId) || UKURAN[0];
+        const foundEngine = AI_TOOLS.find(e => e.id === preset.engineId) || AI_TOOLS[0];
+
+        setBisnis(foundBisnis);
+        setMood(foundMood);
+        setPalette(foundPalette);
+        setUkuran(foundUkuran);
+        setAiTool(foundEngine);
+
+        setForm({
+          nama: preset.nama,
+          tagline: preset.tagline,
+          promo: preset.promo,
+          harga: preset.harga,
+          telepon: preset.telepon,
+          alamat: preset.alamat,
+          catatanKhusus: foundBisnis.visualEn
         });
       };
 
-      const generate = () => {
-        const bisnisObj = BISNIS.find(b => b.val === bisnis) || BISNIS[0];
-        const moodObj = MOODS.find(m => m.val === mood) || MOODS[0];
-        const prompt = generatePrompt(form, bisnis, bisnisObj, mood, moodObj, palette, ukuran, aiTool);
-        const tips = aiTool.tips;
-        let extra = "";
-        if (refFiles.length) extra += `\n\n📌 CATATAN REFERENSI: Berdasarkan ${refFiles.length} foto referensi gaya desain.`;
-        if (asetFiles.length) extra += `\n\n🖼️ CATATAN ASET: Harap sertakan dan proses ${asetFiles.length} foto produk terlampir.`;
-        setResult({ prompt: prompt + extra, tips });
-        setTab("prompt");
+      const loadQuickSample = () => {
+        applyPreset(PRESETS[0]);
       };
 
-      const copy = async () => {
-        if (!result) return;
-        await navigator.clipboard.writeText(result.prompt);
-        setCopied(true); setTimeout(() => setCopied(false), 2000);
+      // Generate Engine Prompt Logic
+      const generatePrompt = () => {
+        const headlineText = form.promo.trim() || form.tagline.trim() || "SERVIS TERPERCAYA";
+        const subtext = form.tagline.trim();
+        const ctaText = form.telepon ? `WA: ${form.telepon}` : "HUBUNGI KAMI SEKARANG";
+
+        let customVisuals = form.catatanKhusus.trim() || bisnis.visualEn;
+
+        let prompt = `Commercial promotional banner design for business named "${form.nama}" operating in ${bisnis.val}.\n\n`;
+        prompt += `ASPECT RATIO / FORMAT: ${ukuran.ar} (${ukuran.sub}).\n`;
+        prompt += `VISUAL STYLE & MOOD: ${mood.val}. ${mood.layoutEn}.\n`;
+        prompt += `COLOR PALETTE: ${palette.val}.\n`;
+        prompt += `HERO VISUAL ELEMENT: ${customVisuals}.\n\n`;
+        prompt += `TEXT & TYPOGRAPHY LAYOUT (Must render exact Indonesian text strings cleanly without typos):\n`;
+        prompt += `• MAIN HEADLINE (Bold, high contrast, largest focal point): "${headlineText.toUpperCase()}"\n`;
+        prompt += `• BRAND NAME (Prominent positioning): "${form.nama}"\n`;
+        if (subtext && subtext.toUpperCase() !== headlineText.toUpperCase()) {
+          prompt += `• SUB-HEADLINE (Secondary size below headline): "${subtext}"\n`;
+        }
+        if (form.harga) {
+          prompt += `• PRICE BADGE (Eye-catching highlight box): "${form.harga}"\n`;
+        }
+        prompt += `• CALL TO ACTION BUTTON (Contrasting background button): "${ctaText}"\n`;
+        if (form.alamat) {
+          prompt += `• LOCATION FOOTER: "${form.alamat}"\n\n`;
+        }
+
+        const engineTag = aiTool.tag.replace("{AR}", ukuran.ar);
+        prompt += `AI GENERATION PARAMETERS: ${engineTag}`;
+
+        setResultPrompt(prompt);
+
+        // Add to history log
+        const newHistoryItem = {
+          id: Date.now(),
+          timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+          nama: form.nama,
+          promo: headlineText,
+          engine: aiTool.name,
+          ratio: ukuran.ar,
+          prompt: prompt
+        };
+        setHistory(prev => [newHistoryItem, ...prev.slice(0, 4)]);
       };
+
+      useEffect(() => {
+        generatePrompt();
+      }, [bisnis, mood, palette, ukuran, aiTool]);
+
+      const copyToClipboard = (textToCopy) => {
+        const target = textToCopy || resultPrompt;
+        if (!target) return;
+        
+        // Executive copy method for iframe compatibility
+        const el = document.createElement('textarea');
+        el.value = target;
+        document.body.appendChild(el);
+        el.select();
+        document.execCommand('copy');
+        document.body.removeChild(el);
+
+        setCopied(true);
+        setTimeout(() => setCopied(false), 2000);
+      };
+
+      const headlineWordCount = form.promo.trim() ? form.promo.trim().split(/\s+/).length : 0;
+      const isHeadlineTooLong = headlineWordCount > 5;
 
       return (
-        <div style={s.wrap}>
-          <header style={s.header}>
-            <div style={s.logoBadge}>MASBAY</div>
-            <div><div style={s.h1}>AI Prompt Generator</div><div style={s.sub}>Buat prompt banner bisnis profesional dalam hitungan detik</div></div>
-            <div style={{ marginLeft: "auto", background: "rgba(61,220,132,0.12)", border: "1px solid rgba(61,220,132,0.3)", color: SUCCESS, fontSize: 11, padding: "4px 10px", borderRadius: 20, fontWeight: 500 }}>✅ Standalone Engine</div>
-          </header>
-
-          <div style={s.main}>
-            <div style={s.stepRow}><div style={s.stepNum}>1</div><div style={s.stepTxt}>Pilih Jenis Bisnis</div></div>
-            <div style={s.card}>
-              <div style={s.grid3}>{BISNIS.map(b => <BisnisBtn key={b.val} {...b} active={bisnis === b.val} onClick={() => setBisnis(b.val)} />)}</div>
-            </div>
-
-            <div style={s.stepRow}><div style={s.stepNum}>2</div><div style={s.stepTxt}>Informasi Bisnis</div></div>
-            <div style={s.card}>
-              <div style={s.fieldGrid2}>
-                <div><label style={s.fieldLabel}>Nama Bisnis</label><input style={s.input} value={form.nama} onChange={e=>set("nama",e.target.value)} placeholder="Contoh: Bengkel Jaya"/></div>
-                <div><label style={s.fieldLabel}>Tagline</label><input style={s.input} value={form.tagline} onChange={e=>set("tagline",e.target.value)} placeholder="Contoh: Cepat & Bergaransi"/></div>
-              </div>
-              <div style={s.fieldGrid2}>
-                <div><label style={s.fieldLabel}>Produk Utama</label><input style={s.input} value={form.produk} onChange={e=>set("produk",e.target.value)} placeholder="Contoh: Servis Motor"/></div>
-                <div><label style={s.fieldLabel}>Promo</label><input style={s.input} value={form.promo} onChange={e=>set("promo",e.target.value)} placeholder="Contoh: Diskon 20%"/></div>
-              </div>
-              <div style={s.fieldGrid3}>
-                <div><label style={s.fieldLabel}>Harga</label><input style={s.input} value={form.harga} onChange={e=>set("harga",e.target.value)} placeholder="Mulai 15rb"/></div>
-                <div><label style={s.fieldLabel}>No. WA</label><input style={s.input} value={form.telepon} onChange={e=>set("telepon",e.target.value)} placeholder="0812..."/></div>
-                <div><label style={s.fieldLabel}>Lokasi</label><input style={s.input} value={form.alamat} onChange={e=>set("alamat",e.target.value)} placeholder="Jl. Raya No.1"/></div>
-              </div>
-              <div>
-                <label style={s.fieldLabel}>Tujuan Banner</label>
-                <select style={s.select} value={form.tujuan} onChange={e=>set("tujuan",e.target.value)}>
-                  <optgroup label="Pemasaran & Penjualan">
-                    <option value="promosi dan branding bisnis">Promosi & Branding Umum</option>
-                    <option value="promo khusus / diskon kilat">Diskon & Promo Khusus</option>
-                    <option value="peluncuran produk / layanan baru">Launching Produk Baru</option>
-                    <option value="cuci gudang / clearance sale">Cuci Gudang (Clearance Sale)</option>
-                    <option value="katalog produk / menu andalan">Katalog / Menu Utama</option>
-                  </optgroup>
-                  <optgroup label="Acara & Momen Khusus">
-                    <option value="grand opening toko baru">Grand Opening / Pembukaan Toko</option>
-                    <option value="anniversary / perayaan ulang tahun bisnis">Anniversary / Hari Jadi Bisnis</option>
-                    <option value="bazar / pameran / pop-up market">Bazar & Pameran</option>
-                    <option value="event khusus / turnamen / festival">Event / Turnamen / Festival</option>
-                    <option value="promo hari raya / momen musiman">Promo Hari Raya (Lebaran/Natal)</option>
-                    <option value="promo hari besar / libur nasional">Promo Hari Besar (Kemerdekaan/Tahun Baru/Imlek)</option>
-                  </optgroup>
-                  <optgroup label="Interaksi Sosial Media">
-                    <option value="giveaway / kontes berhadiah">Giveaway & Kontes</option>
-                    <option value="testimoni pelanggan / ulasan positif">Testimoni & Review Pelanggan</option>
-                    <option value="edukasi produk / tips & trik bermanfaat">Konten Edukasi / Tips</option>
-                  </optgroup>
-                  <optgroup label="Informasi Internal">
-                    <option value="lowongan kerja / rekrutmen karyawan">Lowongan Kerja (Staff/Team)</option>
-                    <option value="pengumuman operasional / jam buka-tutup">Pengumuman Operasional Toko</option>
-                  </optgroup>
-                </select>
-              </div>
-            </div>
-
-            <div style={s.stepRow}><div style={s.stepNum}>3</div><div style={s.stepTxt}>Upload Foto (Optional)</div></div>
-            <div style={s.card}>
-              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 14 }}>
-                <UploadZone title="🖼️ Referensi Desain" badge="Ref" icon="📁" sub="Foto contoh layout spanduk" files={refFiles} onUpload={fl=>readFiles(fl,setRefFiles)} onClear={()=>setRefFiles([])} />
-                <UploadZone title="📷 Aset Produk" badge="Aset" icon="🖼️" sub="Foto produk/logo brand" files={asetFiles} onUpload={fl=>readFiles(fl,setAsetFiles)} onClear={()=>setAsetFiles([])} />
-              </div>
-            </div>
-
-            <div style={s.stepRow}><div style={s.stepNum}>4</div><div style={s.stepTxt}>Gaya Visual & Warna</div></div>
-            <div style={s.card}>
-              <div style={s.tagFlex}>{MOODS.map(m => <Chip key={m.val} label={m.label} active={mood === m.val} onClick={()=>setMood(m.val)}/>)}</div>
-              <hr style={s.glowLine} />
-              <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>{PALETTES.map(p => <PaletteBtn key={p.val} label={p.label} gradient={p.g} active={palette === p.val} onClick={()=>setPalette(p.val)}/>)}</div>
-            </div>
-
-            <div style={s.stepRow}><div style={s.stepNum}>5</div><div style={s.stepTxt}>Ukuran Spanduk</div></div>
-            <div style={s.card}>
-              <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill,minmax(120px,1fr))", gap: 10 }}>{UKURAN.map(u => <UkuranBtn key={u.val} {...u} active={ukuran.val === u.val} onClick={()=>setUkuran(u)}/>)}</div>
-            </div>
-
-            <div style={s.stepRow}><div style={s.stepNum}>6</div><div style={s.stepTxt}>Target Platform AI</div></div>
-            <div style={s.card}>
-              <div style={{ display: "flex", flexWrap: "wrap", gap: 10 }}>{AI_TOOLS.map(a => <AiBtn key={a.val} {...a} active={aiTool.val === a.val} onClick={()=>setAiTool(a)}/>)}</div>
-            </div>
-
-            <button style={s.btnGenerate} onClick={generate}>⚡ Generate Prompt Sekarang</button>
-
-            {result && (
-              <div style={{ marginTop: 24 }}>
-                <div style={s.tabs}>
-                  <div style={tab === "prompt" ? s.tabActive : s.tab} onClick={()=>setTab("prompt")}>🇮🇩 Prompt Banner</div>
-                  <div style={tab === "tips" ? s.tabActive : s.tab} onClick={()=>setTab("tips")}>💡 Tips</div>
+        <div class="min-h-screen flex flex-col justify-between">
+          <div>
+            {/* Header */}
+            <header class="bg-darkcard/90 backdrop-blur border-b border-darkborder sticky top-0 z-40 px-4 sm:px-8 py-3.5 shadow-lg">
+              <div class="max-w-6xl mx-auto flex flex-wrap items-center justify-between gap-4">
+                <div class="flex items-center gap-3">
+                  <div class="bg-brand text-black font-heading font-extrabold text-xs px-2.5 py-1 rounded-lg tracking-wider flex items-center gap-1 shadow-md shadow-brand/20">
+                    <i class="fa-solid fa-bolt"></i>
+                    <span>MASBAY v2.0</span>
+                  </div>
+                  <div>
+                    <h1 class="font-heading font-bold text-base sm:text-lg text-white leading-tight flex items-center gap-2">
+                      AI Prompt Generator
+                      <span class="text-[10px] bg-darkborder text-slate-300 px-2 py-0.5 rounded-full border border-slate-700 font-sans font-normal hidden sm:inline-block">Standalone Engine</span>
+                    </h1>
+                    <p class="text-xs text-slate-400 hidden sm:block">Engine Pembuat Prompt Spanduk/Banner UMKM Presisi & Siap Pakai</p>
+                  </div>
                 </div>
-                {tab === "prompt" ? (
-                  <>
-                    <div style={s.promptBox}>
-                      <textarea readOnly value={result.prompt} style={{ ...s.textarea, minHeight: 180, border:"none", background:"transparent", color:TEXT }} />
+
+                <div class="flex items-center gap-2.5">
+                  <button onClick={loadQuickSample} class="text-xs bg-darksurface hover:bg-slate-800 text-brand px-3 py-1.5 rounded-xl border border-brand/30 transition flex items-center gap-1.5 font-medium shadow-sm">
+                    <i class="fa-solid fa-wand-magic-sparkles"></i>
+                    <span>Isi Contoh Instan</span>
+                  </button>
+
+                  <button onClick={() => setShowMockupModal(true)} class="text-xs bg-brand/10 hover:bg-brand/20 text-brand border border-brand/40 px-3 py-1.5 rounded-xl transition flex items-center gap-1.5 font-medium">
+                    <i class="fa-solid fa-eye"></i>
+                    <span>Preview Skema Banner</span>
+                  </button>
+                </div>
+              </div>
+            </header>
+
+            {/* Main Content */}
+            <main class="max-w-6xl mx-auto px-4 sm:px-6 mt-6 space-y-6">
+
+              {/* Quick Preset Selector Bar */}
+              <div class="bg-darkcard border border-darkborder rounded-2xl p-3 shadow-md flex items-center gap-2 overflow-x-auto">
+                <span class="text-xs text-slate-400 font-semibold px-2 whitespace-nowrap flex items-center gap-1">
+                  <i class="fa-solid fa-bookmark text-brand"></i> Preset Instan:
+                </span>
+                {PRESETS.map((p, idx) => (
+                  <button 
+                    key={idx} 
+                    onClick={() => applyPreset(p)}
+                    class="text-xs bg-darkbg hover:bg-darksurface text-slate-300 hover:text-brand border border-darkborder px-3 py-1 rounded-xl whitespace-nowrap transition flex items-center gap-1.5"
+                  >
+                    <span>{p.name}</span>
+                  </button>
+                ))}
+              </div>
+
+              {/* Step 1: Kategori Bisnis */}
+              <section class="bg-darkcard border border-darkborder rounded-2xl p-5 shadow-xl transition-all">
+                <div class="flex items-center justify-between mb-3">
+                  <h2 class="text-xs font-bold text-brand uppercase tracking-wider flex items-center gap-2">
+                    <span class="w-5 h-5 rounded-full bg-brand text-black flex items-center justify-center text-[10px] font-extrabold">1</span>
+                    Pilih Kategori Bisnis UMKM
+                  </h2>
+                  <span class="text-[11px] text-slate-400">Terpilih: <strong class="text-white">{bisnis.label}</strong></span>
+                </div>
+                
+                <div class="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-6 gap-2.5">
+                  {BISNIS.map(b => (
+                    <button 
+                      key={b.id} 
+                      onClick={() => {
+                        setBisnis(b);
+                        if (!form.catatanKhusus || form.catatanKhusus === bisnis.visualEn) {
+                          updateField("catatanKhusus", b.visualEn);
+                        }
+                      }} 
+                      class={`p-3 rounded-xl border text-left text-xs transition-all flex flex-col items-center justify-center text-center gap-1.5 group ${
+                        bisnis.id === b.id 
+                          ? 'bg-brand/10 border-brand text-brand font-semibold shadow-lg shadow-brand/5 scale-[1.02]' 
+                          : 'bg-darkbg border-darkborder text-slate-300 hover:border-slate-700 hover:bg-darksurface'
+                      }`}
+                    >
+                      <span class="text-2xl group-hover:scale-110 transition-transform">{b.icon}</span>
+                      <span class="line-clamp-1">{b.label}</span>
+                    </button>
+                  ))}
+                </div>
+              </section>
+
+              {/* Step 2: Form Informasi Banner */}
+              <section class="bg-darkcard border border-darkborder rounded-2xl p-5 shadow-xl">
+                <h2 class="text-xs font-bold text-brand uppercase tracking-wider mb-4 flex items-center gap-2">
+                  <span class="w-5 h-5 rounded-full bg-brand text-black flex items-center justify-center text-[10px] font-extrabold">2</span>
+                  Informasi Teks Banner & Promo
+                </h2>
+
+                <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
+                  <div>
+                    <label class="block text-xs font-medium text-slate-400 mb-1">Nama Bisnis / Brand *</label>
+                    <input 
+                      type="text" 
+                      class="w-full bg-darkbg border border-darkborder rounded-xl px-3.5 py-2.5 text-xs text-white focus:outline-none focus:border-brand transition" 
+                      placeholder="Contoh: Bengkel Masbay"
+                      value={form.nama} 
+                      onChange={e => updateField("nama", e.target.value)} 
+                    />
+                  </div>
+
+                  <div>
+                    <label class="block text-xs font-medium text-slate-400 mb-1">Tagline / Sub-Headline</label>
+                    <input 
+                      type="text" 
+                      class="w-full bg-darkbg border border-darkborder rounded-xl px-3.5 py-2.5 text-xs text-white focus:outline-none focus:border-brand transition" 
+                      placeholder="Contoh: Cepat, Presisi & Bergaransi"
+                      value={form.tagline} 
+                      onChange={e => updateField("tagline", e.target.value)} 
+                    />
+                  </div>
+
+                  <div>
+                    <label class="block text-xs font-medium text-slate-400 mb-1">Teks Promo / Headline Utama *</label>
+                    <input 
+                      type="text" 
+                      class="w-full bg-darkbg border border-darkborder rounded-xl px-3.5 py-2.5 text-xs text-white focus:outline-none focus:border-brand transition" 
+                      placeholder="Contoh: DISKON 20% SERVIS TOTAL"
+                      value={form.promo} 
+                      onChange={e => updateField("promo", e.target.value)} 
+                    />
+                  </div>
+
+                  <div>
+                    <label class="block text-xs font-medium text-slate-400 mb-1">Badge Harga / Penawaran (Opsional)</label>
+                    <input 
+                      type="text" 
+                      class="w-full bg-darkbg border border-darkborder rounded-xl px-3.5 py-2.5 text-xs text-white focus:outline-none focus:border-brand transition" 
+                      placeholder="Contoh: Mulai Rp 15.000"
+                      value={form.harga} 
+                      onChange={e => updateField("harga", e.target.value)} 
+                    />
+                  </div>
+
+                  <div>
+                    <label class="block text-xs font-medium text-slate-400 mb-1">No. WhatsApp / Kontak CTA</label>
+                    <input 
+                      type="text" 
+                      class="w-full bg-darkbg border border-darkborder rounded-xl px-3.5 py-2.5 text-xs text-white focus:outline-none focus:border-brand transition" 
+                      placeholder="Contoh: 0812-3456-7890"
+                      value={form.telepon} 
+                      onChange={e => updateField("telepon", e.target.value)} 
+                    />
+                  </div>
+
+                  <div>
+                    <label class="block text-xs font-medium text-slate-400 mb-1">Alamat Singkat / Lokasi</label>
+                    <input 
+                      type="text" 
+                      class="w-full bg-darkbg border border-darkborder rounded-xl px-3.5 py-2.5 text-xs text-white focus:outline-none focus:border-brand transition" 
+                      placeholder="Contoh: Jl. Mojosongo No. 12, Surakarta"
+                      value={form.alamat} 
+                      onChange={e => updateField("alamat", e.target.value)} 
+                    />
+                  </div>
+                </div>
+
+                {/* Dynamic Warning Indicator */}
+                {isHeadlineTooLong && (
+                  <div class="mt-4 bg-amber-500/10 border border-amber-500/30 rounded-xl p-3 flex items-start gap-2 text-amber-300 text-xs">
+                    <i class="fa-solid fa-triangle-exclamation text-amber-400 text-base mt-0.5"></i>
+                    <div>
+                      <strong>Peringatan Ejaan AI Visual ({headlineWordCount} kata):</strong>
+                      <p class="text-[11px] text-amber-200/80 mt-0.5">⚠️ Tips: Teks headline >5 kata rentan typo/gibberish di AI visual. Buat headline lebih singkat & padat untuk hasil ejaan sempurna!</p>
                     </div>
-                    <div style={s.copyRow}>
-                      <button style={s.btnCopy} onClick={copy}>{copied ? "✅ Tersalin!" : "📋 Copy Prompt"}
-                      </button>
-                    </div>
-                  </>
-                ) : (
-                  <div style={s.tipsBox}>
-                    {result.tips.map((t,i)=><p key={i} style={{fontSize:13, color:SUCCESS}}>{i+1}. {t}</p>)}
                   </div>
                 )}
-              </div>
-            )}
+
+                {/* Custom Visual Detail Description */}
+                <div class="mt-4">
+                  <label class="block text-xs font-medium text-slate-400 mb-1 flex items-center justify-between">
+                    <span>Elemen Visual Tambahan (Bahasa Inggris Disarankan)</span>
+                    <span class="text-[10px] text-brand">Otomatis terisi dari kategori bisnis</span>
+                  </label>
+                  <input 
+                    type="text" 
+                    class="w-full bg-darkbg border border-darkborder rounded-xl px-3.5 py-2.5 text-xs text-slate-200 font-mono focus:outline-none focus:border-brand transition"
+                    value={form.catatanKhusus}
+                    onChange={e => updateField("catatanKhusus", e.target.value)}
+                  />
+                </div>
+              </section>
+
+              {/* Step 3: Style Visual & Warna */}
+              <section class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                
+                {/* Mood Selection */}
+                <div class="bg-darkcard border border-darkborder rounded-2xl p-5 shadow-xl flex flex-col justify-between">
+                  <div>
+                    <h2 class="text-xs font-bold text-brand uppercase tracking-wider mb-3 flex items-center gap-2">
+                      <span class="w-5 h-5 rounded-full bg-brand text-black flex items-center justify-center text-[10px] font-extrabold">3</span>
+                      Gaya Visual & Mood
+                    </h2>
+                    
+                    <div class="grid grid-cols-2 gap-2">
+                      {MOODS.map(m => (
+                        <button 
+                          key={m.id} 
+                          onClick={() => setMood(m)}
+                          class={`p-2.5 rounded-xl border text-left text-xs transition-all ${
+                            mood.id === m.id 
+                              ? 'bg-brand/10 border-brand text-brand font-semibold shadow-md' 
+                              : 'bg-darkbg border-darkborder text-slate-300 hover:border-slate-700'
+                          }`}
+                        >
+                          <div class="font-medium">{m.label}</div>
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+
+                  <div class="mt-4 bg-darkbg p-3 rounded-xl border border-darkborder text-[11px] text-slate-400">
+                    <span class="text-slate-200 font-semibold block mb-0.5">Layout Komposisi:</span>
+                    {mood.layoutEn}
+                  </div>
+                </div>
+
+                {/* Palette Selection */}
+                <div class="bg-darkcard border border-darkborder rounded-2xl p-5 shadow-xl flex flex-col justify-between">
+                  <div>
+                    <h2 class="text-xs font-bold text-brand uppercase tracking-wider mb-3 flex items-center gap-2">
+                      <span class="w-5 h-5 rounded-full bg-brand text-black flex items-center justify-center text-[10px] font-extrabold">4</span>
+                      Palet Warna Dominan
+                    </h2>
+
+                    <div class="grid grid-cols-2 gap-2">
+                      {PALETTES.map(p => (
+                        <button 
+                          key={p.id} 
+                          onClick={() => setPalette(p)}
+                          class={`p-2.5 rounded-xl border text-left text-xs transition-all flex items-center gap-2.5 ${
+                            palette.id === p.id 
+                              ? 'bg-brand/10 border-brand text-white font-semibold shadow-md' 
+                              : 'bg-darkbg border-darkborder text-slate-400 hover:border-slate-700'
+                          }`}
+                        >
+                          <div class={`w-5 h-5 rounded-md bg-gradient-to-r ${p.bg} border border-white/20 flex-shrink-0`}></div>
+                          <span class="truncate">{p.label}</span>
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+
+                  <div class="mt-4 bg-darkbg p-3 rounded-xl border border-darkborder text-[11px] text-slate-400">
+                    <span class="text-slate-200 font-semibold block mb-0.5">Deskripsi Warna AI:</span>
+                    {palette.val}
+                  </div>
+                </div>
+
+              </section>
+
+              {/* Step 4: Ukuran & Engine AI */}
+              <section class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                
+                {/* Aspek Rasio Ukuran */}
+                <div class="bg-darkcard border border-darkborder rounded-2xl p-5 shadow-xl">
+                  <h2 class="text-xs font-bold text-brand uppercase tracking-wider mb-3 flex items-center gap-2">
+                    <span class="w-5 h-5 rounded-full bg-brand text-black flex items-center justify-center text-[10px] font-extrabold">5</span>
+                    Format & Rasio Ukuran Spanduk
+                  </h2>
+
+                  <div class="grid grid-cols-2 sm:grid-cols-3 gap-2.5">
+                    {UKURAN.map(u => (
+                      <button 
+                        key={u.id} 
+                        onClick={() => setUkuran(u)}
+                        class={`p-3 rounded-xl border text-left text-xs transition-all ${
+                          ukuran.id === u.id 
+                            ? 'bg-brand/10 border-brand text-brand font-semibold shadow-md' 
+                            : 'bg-darkbg border-darkborder text-slate-300 hover:border-slate-700'
+                        }`}
+                      >
+                        <div class="font-bold text-white text-sm">{u.label}</div>
+                        <div class="text-[10px] text-slate-400 mt-0.5">{u.sub}</div>
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Target AI Engine */}
+                <div class="bg-darkcard border border-darkborder rounded-2xl p-5 shadow-xl flex flex-col justify-between">
+                  <div>
+                    <h2 class="text-xs font-bold text-brand uppercase tracking-wider mb-3 flex items-center gap-2">
+                      <span class="w-5 h-5 rounded-full bg-brand text-black flex items-center justify-center text-[10px] font-extrabold">6</span>
+                      Target Platform AI Image Generator
+                    </h2>
+
+                    <div class="grid grid-cols-2 gap-2">
+                      {AI_TOOLS.map(a => (
+                        <button 
+                          key={a.id} 
+                          onClick={() => setAiTool(a)}
+                          class={`p-2.5 rounded-xl border text-left text-xs transition-all ${
+                            aiTool.id === a.id 
+                              ? 'bg-cyan-500/10 border-cyan-400 text-cyan-300 font-semibold shadow-md' 
+                              : 'bg-darkbg border-darkborder text-slate-400 hover:border-slate-700'
+                          }`}
+                        >
+                          <div class="font-medium text-white">{a.name}</div>
+                          <div class="text-[10px] text-cyan-400 font-mono mt-0.5 truncate">{a.tag.replace("{AR}", ukuran.ar)}</div>
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+
+                  <div class="mt-4 bg-cyan-950/20 border border-cyan-800/40 p-3 rounded-xl text-[11px] text-cyan-200/90 flex items-start gap-2">
+                    <i class="fa-solid fa-lightbulb text-cyan-400 text-sm mt-0.5"></i>
+                    <div>
+                      <strong>Tips Engine {aiTool.name}:</strong> {aiTool.note}
+                    </div>
+                  </div>
+                </div>
+
+              </section>
+
+              {/* Output Display & Copy Section */}
+              <section class="bg-darkcard border border-darkborder rounded-2xl p-5 shadow-2xl space-y-4">
+                <div class="flex flex-wrap items-center justify-between gap-3 border-b border-darkborder pb-3">
+                  <div class="flex items-center gap-2">
+                    <i class="fa-solid fa-code text-brand text-base"></i>
+                    <h3 class="text-sm font-bold text-white uppercase tracking-wider font-heading">Hasil Prompt Banner Presisi</h3>
+                  </div>
+
+                  <div class="flex items-center gap-2">
+                    <button 
+                      onClick={() => generatePrompt()}
+                      class="text-xs bg-darksurface hover:bg-slate-800 text-slate-300 border border-darkborder px-3 py-1.5 rounded-xl transition flex items-center gap-1.5"
+                    >
+                      <i class="fa-solid fa-arrows-rotate text-brand"></i>
+                      <span>Regenerate</span>
+                    </button>
+
+                    <button 
+                      onClick={() => copyToClipboard()}
+                      class="text-xs bg-brand hover:bg-brandHover text-black font-bold px-4 py-1.5 rounded-xl transition flex items-center gap-1.5 shadow-md shadow-brand/10"
+                    >
+                      <i class="fa-solid fa-copy"></i>
+                      <span>{copied ? "✅ Tersalin!" : "📋 Copy Prompt"}</span>
+                    </button>
+                  </div>
+                </div>
+
+                <div class="relative">
+                  <textarea 
+                    readOnly 
+                    rows="10" 
+                    class="w-full bg-darkbg border border-darkborder rounded-xl p-4 text-xs font-mono text-slate-200 leading-relaxed focus:outline-none focus:border-brand/50 select-all"
+                    value={resultPrompt}
+                  ></textarea>
+                </div>
+
+                {/* History Log */}
+                {history.length > 0 && (
+                  <div class="pt-2">
+                    <h4 class="text-[11px] font-semibold text-slate-400 mb-2 flex items-center gap-1.5">
+                      <i class="fa-solid fa-clock-rotate-left text-brand"></i> Riwayat Prompt Terakhir:
+                    </h4>
+                    <div class="flex flex-wrap gap-2">
+                      {history.map(item => (
+                        <button
+                          key={item.id}
+                          onClick={() => setResultPrompt(item.prompt)}
+                          class="text-[11px] bg-darkbg hover:bg-darksurface border border-darkborder text-slate-300 px-2.5 py-1 rounded-lg transition flex items-center gap-1.5"
+                        >
+                          <span class="text-brand font-mono">[{item.timestamp}]</span>
+                          <span class="truncate max-w-[120px]">{item.nama}</span>
+                          <span class="text-slate-500 text-[10px]">({item.engine})</span>
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </section>
+
+            </main>
           </div>
-          <footer style={s.footer}>MASBAY Generator · Siap Copy Paste Keajaibanmu 🚀 | Ciptaan Bayu Nurcahyo (Mahasiswa Bisnis Digital POLITEKNIK AKBARA SURAKARTA).</footer>
+
+          {/* Interactive Visual Schematic Mockup Modal */}
+          {showMockupModal && (
+            <div class="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
+              <div class="bg-darkcard border border-darkborder rounded-2xl max-w-lg w-full p-6 shadow-2xl relative space-y-4">
+                <button 
+                  onClick={() => setShowMockupModal(false)}
+                  class="absolute top-4 right-4 text-slate-400 hover:text-white w-8 h-8 rounded-full bg-darkbg flex items-center justify-center border border-darkborder"
+                >
+                  ✕
+                </button>
+
+                <div>
+                  <h3 class="text-base font-bold text-white font-heading flex items-center gap-2">
+                    <i class="fa-solid fa-compass-drafting text-brand"></i>
+                    Skema Komposisi Banner AI
+                  </h3>
+                  <p class="text-xs text-slate-400">Preview tata letak visual & posisi hirarki teks pada canvas {ukuran.ar}</p>
+                </div>
+
+                {/* Canvas Container */}
+                <div class="bg-darkbg border border-darkborder rounded-xl p-4 flex items-center justify-center min-h-[260px]">
+                  <div class={`w-full max-w-xs ${ukuran.cssAspect} bg-gradient-to-br ${palette.bg} rounded-lg p-3 border border-white/20 flex flex-col justify-between shadow-2xl relative overflow-hidden text-center`}>
+                    
+                    {/* Background Graphic Mock */}
+                    <div class="absolute inset-0 opacity-15 bg-[radial-gradient(#fff_1px,transparent_1px)] [background-size:12px_12px] pointer-events-none"></div>
+
+                    {/* Top Header / Brand */}
+                    <div class="z-10">
+                      <span class="inline-block bg-black/60 text-brand text-[10px] font-bold px-2 py-0.5 rounded border border-brand/30 uppercase tracking-wider">
+                        {form.nama || "NAMA BISNIS"}
+                      </span>
+                    </div>
+
+                    {/* Hero Visual Icon Placeholder */}
+                    <div class="z-10 my-auto py-2">
+                      <div class="text-3xl mb-1 drop-shadow-md">{bisnis.icon}</div>
+                      <h4 class="font-heading font-extrabold text-sm sm:text-base leading-tight uppercase tracking-wide drop-shadow text-white">
+                        {form.promo.toUpperCase() || "HEADLINE PROMO"}
+                      </h4>
+                      {form.tagline && (
+                        <p class="text-[10px] text-slate-200 mt-0.5 line-clamp-1 italic">{form.tagline}</p>
+                      )}
+                    </div>
+
+                    {/* Bottom CTA & Price */}
+                    <div class="z-10 space-y-1 mt-auto">
+                      {form.harga && (
+                        <div class="inline-block bg-brand text-black font-extrabold text-[10px] px-2 py-0.5 rounded shadow">
+                          {form.harga}
+                        </div>
+                      )}
+                      <div class="bg-white text-black font-bold text-[9px] py-1 px-3 rounded-md shadow uppercase tracking-wider mx-auto w-fit">
+                        {form.telepon ? `WA: ${form.telepon}` : "HUBUNGI SEKARANG"}
+                      </div>
+                      {form.alamat && (
+                        <div class="text-[8px] text-slate-300 line-clamp-1">{form.alamat}</div>
+                      )}
+                    </div>
+                  </div>
+                </div>
+
+                <div class="text-right">
+                  <button 
+                    onClick={() => setShowMockupModal(false)}
+                    class="bg-brand text-black font-bold text-xs px-4 py-2 rounded-xl"
+                  >
+                    Tutup Preview
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Footer */}
+          <footer class="mt-12 text-center text-xs text-slate-500 border-t border-darkborder py-6 px-4">
+            <p>MASBAY Generator v2.0 · Engine Pembuat Prompt Banner AI Presisi 🚀</p>
+            <p class="text-[11px] text-slate-600 mt-1">Ciptaan Bayu Nurcahyo (Mahasiswa Bisnis Digital POLITEKNIK AKBARA SURAKARTA)</p>
+          </footer>
         </div>
       );
     }
 
-    // Menggunakan ReactDOM versi 18 standar
-    const reactRoot = ReactDOM.createRoot(document.getElementById('root'));
-    reactRoot.render(<App />);
+    const root = ReactDOM.createRoot(document.getElementById('root'));
+    root.render(<App />);
   </script>
 </body>
 </html>
