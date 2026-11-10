@@ -5,10 +5,10 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>MASBAY — AI Prompt Generator v2.0</title>
   
-  <!-- Tailwind CSS -->
+  <!-- Tailwind CSS CDN -->
   <script src="https://cdn.tailwindcss.com"></script>
   
-  <!-- Google Fonts -->
+  <!-- Google Fonts (Inter & Space Grotesk) -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet">
@@ -44,7 +44,7 @@
   <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
 
   <style>
-    /* Custom scrollbar for output textarea & history */
+    /* Custom Scrollbar */
     ::-webkit-scrollbar {
       width: 6px;
       height: 6px;
@@ -63,151 +63,211 @@
 </head>
 <body class="bg-darkbg text-slate-200 font-sans antialiased selection:bg-brand selection:text-black min-h-screen flex flex-col">
 
+  <!-- Container Utama React App -->
   <div id="root"></div>
 
+  <!-- Script Logika React dalam JSX -->
   <script type="text/babel">
-    const { useState, useEffect, useRef } = React;
+    const { useState, useEffect } = React;
 
-    // Data Constants
+    // --- DATA KONSTANTA ---
     const BISNIS = [
-      { id: "bengkel", icon: "🏍️", label: "Bengkel Motor", val: "bengkel motor / otomotif", visualEn: "realistic motorcycle engine closeup, polished chrome mechanical parts, mechanic tools, dramatic workshop lighting", sampleName: "Bengkel Motor Masbay", sampleTag: "Servis Cepat, Presisi & Bergaransi", samplePromo: "DISKON 20% SERVIS TOTAL", sampleHarga: "Mulai Rp 25.000" },
-      { id: "laundry", icon: "👕", label: "Laundry", val: "laundry kiloan / pakaian", visualEn: "stack of fresh fluffy folded laundry, clean washing machine bubbles, bright fresh fabric texture, soft detergent aroma vibe", sampleName: "Masbay Clean Laundry", sampleTag: "Wangi, Rapi, Antar Jemput", samplePromo: "CUCI 5KG GRATIS 1KG", sampleHarga: "Rp 6.000 / kg" },
-      { id: "kuliner", icon: "🍗", label: "Kuliner", val: "warung makan / restoran kuliner", visualEn: "steaming hot delicious Indonesian traditional dish closeup, fresh herbs garnish, studio food photography, mouth-watering lighting", sampleName: "Ayam Goreng Masbay", sampleTag: "Sambal Mantap Rasa Sambel Desa", samplePromo: "PAKET HEMAT KENYANG", sampleHarga: "Porsi Mulai 15rb" },
-      { id: "cafe", icon: "🧋", label: "Minuman / Cafe", val: "kedai kopi / cafe kekinian", visualEn: "iced artisan boba milk tea and espresso glass with condensation drops, roasted coffee beans background, cozy ambient café glow", sampleName: "Masbay Coffee & Eatery", sampleTag: "Tempat Nongkrong Kopi Kekinian", samplePromo: "BUY 1 GET 1 FREE KOPI SUSU", sampleHarga: "Mulai Rp 15.000" },
-      { id: "barber", icon: "✂️", label: "Barbershop", val: "barbershop / salon pria", visualEn: "vintage hair clippers, razor blade, sharp scissors, sleek leather barber chair in background, moody warm wood aesthetic", sampleName: "Masbay Gentleman Barber", sampleTag: "Potong Haircut Modern & Massage", samplePromo: "PAKET CUKUR + WASH 30K", sampleHarga: "Rp 30.000" },
-      { id: "fashion", icon: "👗", label: "Fashion", val: "toko fashion / distro", visualEn: "modern stylish streetwear clothing flat lay arrangement, premium cotton fabric texture, aesthetic minimalist studio setup", sampleName: "Masbay Apparel Co.", sampleTag: "Outfit Trendy Anak Muda Surakarta", samplePromo: "CLEARANCE SALE DISKON 50%", sampleHarga: "Mulai 50rb" },
-      { id: "elektronik", icon: "📱", label: "Elektronik / HP", val: "toko gadget / service HP", visualEn: "latest flagship smartphone mockup, glowing blue circuit neon accents, high-tech repair precision tools desk", sampleName: "Masbay Cell & Repair", sampleTag: "Spesialis Ganti LCD & Battery", samplePromo: "BONUS TEMPERED GLASS", sampleHarga: "Bisa Ditunggu" },
-      { id: "properti", icon: "🏠", label: "Properti / Kos", val: "properti / kos-kosan eksklusif", visualEn: "modern minimalist house exterior design, warm sunset architectural lighting, cozy tropical landscaping", sampleName: "Kos Masbay Eksklusif", sampleTag: "Fasilitas AC, Wi-Fi & Kamar Mandi Dalam", samplePromo: "DISKON SEWA BULAN PERTAMA", sampleHarga: "Rp 1.2jt / bulan" },
-      { id: "kecantikan", icon: "💄", label: "Kecantikan", val: "klinik kecantikan / skincare", visualEn: "aesthetic glowing skincare bottles, pastel flowers background, soft luxury spa lighting, pristine marble surface", sampleName: "Masbay Glow Beauty", sampleTag: "Perawatan Wajah Glowing Instant", samplePromo: "FACIAL GLOWING DISKON 30%", sampleHarga: "Mulai 99rb" },
-      { id: "event", icon: "🎉", label: "Event / WO", val: "wedding & event organizer", visualEn: "luxurious floral wedding decoration, fairy lights bokeh, elegant ballroom setup, romantic golden glow", sampleName: "Masbay Wedding Planner", sampleTag: "Wujudkan Pernikahan Impianmu", samplePromo: "FREE DEKORASI AKAD NIKAH", sampleHarga: "Paket Hemat 2026" },
-      { id: "sembako", icon: "🛒", label: "Sembako / Mini", val: "toko sembako / minimarket", visualEn: "neatly organized grocery shelves, fresh fruits and daily goods display, bright welcoming retail shop lighting", sampleName: "Toko Sembako Masbay", sampleTag: "Lengkap, Murah, Melayani Grosir", samplePromo: "PROMO MINYAK GORENG MURAH", sampleHarga: "Harga Agen" },
-      { id: "otomotif", icon: "🚗", label: "Cuci Mobil/Detailing", val: "jasa auto detailing / cuci mobil", visualEn: "glistening wet luxury sports car closeup, high-pressure foam wash bubbles, glossy paint shine reflection", sampleName: "Masbay Auto Care", sampleTag: "Cuci Salju & Nano Ceramic Coating", samplePromo: "PAKET KILAT KINCLONG", sampleHarga: "Rp 40.000" }
+      { 
+        id: "bengkel", 
+        icon: "🏍️", 
+        label: "Bengkel Motor", 
+        val: "bengkel motor / otomotif", 
+        visualEn: "realistic motorcycle engine closeup, polished chrome mechanical parts, mechanic tools, oil drops, dramatic garage lighting",
+        sampleName: "Bengkel Masbay Speed", 
+        sampleTag: "Servis Cepat, Presisi & Bergaransi", 
+        samplePromo: "DISKON 20% SERVIS TOTAL", 
+        sampleHarga: "Mulai Rp 25.000",
+        samplePhone: "0857-4433-2211",
+        sampleAddr: "Kawasan Jebres, Surakarta"
+      },
+      { 
+        id: "laundry", 
+        icon: "👕", 
+        label: "Laundry", 
+        val: "laundry kiloan / pakaian", 
+        visualEn: "stack of fresh fluffy folded laundry, clean washing machine bubbles, bright fresh fabric texture, soft detergent aroma vibe",
+        sampleName: "Masbay Clean Laundry", 
+        sampleTag: "Wangi, Rapi, Antar Jemput", 
+        samplePromo: "CUCI 5KG GRATIS 1KG", 
+        sampleHarga: "Rp 6.000 / kg",
+        samplePhone: "0813-1122-3344",
+        sampleAddr: "Jl. Mojosongo No. 12"
+      },
+      { 
+        id: "kuliner", 
+        icon: "🍗", 
+        label: "Kuliner", 
+        val: "warung makan / restoran kuliner", 
+        visualEn: "steaming hot delicious Indonesian traditional dish closeup, fresh herbs garnish, studio food photography, mouth-watering lighting",
+        sampleName: "Ayam Goreng Masbay", 
+        sampleTag: "Sambal Mantap Rasa Sambel Desa", 
+        samplePromo: "PAKET HEMAT KENYANG", 
+        sampleHarga: "Porsi Mulai 15rb",
+        samplePhone: "0812-9876-5432",
+        sampleAddr: "Jl. Slamet Riyadi No. 45"
+      },
+      { 
+        id: "cafe", 
+        icon: "🧋", 
+        label: "Minuman / Cafe", 
+        val: "kedai kopi / cafe kekinian", 
+        visualEn: "iced artisan boba milk tea and espresso glass with condensation drops, roasted coffee beans background, cozy ambient café glow",
+        sampleName: "Masbay Coffee & Eatery", 
+        sampleTag: "Tempat Nongkrong Kopi Kekinian", 
+        samplePromo: "BUY 1 GET 1 FREE KOPI", 
+        sampleHarga: "Mulai Rp 15.000",
+        samplePhone: "0857-9900-1122",
+        sampleAddr: "Jl. Pemuda No. 8, Surakarta"
+      },
+      { 
+        id: "barber", 
+        icon: "✂️", 
+        label: "Barbershop", 
+        val: "barbershop / salon pria", 
+        visualEn: "vintage hair clippers, razor blade, sharp scissors, sleek leather barber chair in background, moody warm wood aesthetic",
+        sampleName: "Masbay Gentleman Barber", 
+        sampleTag: "Potong Haircut Modern & Massage", 
+        samplePromo: "PAKET CUKUR + WASH 30K", 
+        sampleHarga: "Rp 30.000",
+        samplePhone: "0821-7788-9900",
+        sampleAddr: "Center Point Plaza Lt. 1"
+      },
+      { 
+        id: "fashion", 
+        icon: "👗", 
+        label: "Fashion", 
+        val: "toko fashion / distro", 
+        visualEn: "modern stylish streetwear clothing flat lay arrangement, premium cotton fabric texture, aesthetic minimalist studio setup",
+        sampleName: "Masbay Apparel Co.", 
+        sampleTag: "Outfit Trendy Anak Muda Surakarta", 
+        samplePromo: "CLEARANCE SALE DISKON 50%", 
+        sampleHarga: "Mulai 50rb",
+        samplePhone: "0819-3344-5566",
+        sampleAddr: "Jl. Diponegoro No. 22"
+      },
+      { 
+        id: "elektronik", 
+        icon: "📱", 
+        label: "Elektronik", 
+        val: "toko gadget / service HP", 
+        visualEn: "latest flagship smartphone mockup, glowing blue circuit neon accents, high-tech repair precision tools desk",
+        sampleName: "Masbay Cell & Repair", 
+        sampleTag: "Spesialis Ganti LCD & Battery", 
+        samplePromo: "BONUS TEMPERED GLASS", 
+        sampleHarga: "Bisa Ditunggu",
+        samplePhone: "0888-2233-4455",
+        sampleAddr: "Ruko Solo Grand Mall"
+      },
+      { 
+        id: "properti", 
+        icon: "🏠", 
+        label: "Properti", 
+        val: "properti / kos-kosan eksklusif", 
+        visualEn: "modern minimalist house exterior design, warm sunset architectural lighting, cozy tropical landscaping",
+        sampleName: "Kos Masbay Eksklusif", 
+        sampleTag: "Fasilitas AC, Wi-Fi & Kamar Mandi Dalam", 
+        samplePromo: "DISKON SEWA BULAN PERTAMA", 
+        sampleHarga: "Rp 1.2jt / bulan",
+        samplePhone: "0811-2233-4455",
+        sampleAddr: "Kawasan Kampus UNS Surakarta"
+      }
     ];
 
     const MOODS = [
       { id: "bold", label: "⚡ Bold & Edgy", val: "bold aggressive dark dramatic high-contrast striking", layoutEn: "dynamic asymmetric layout with strong diagonal contrast lines and sharp edgy accents" },
       { id: "clean", label: "🧊 Clean Modern", val: "clean professional minimalist modern sleek whitespace", layoutEn: "clean structured grid layout with generous whitespace and ultra-crisp edges" },
       { id: "luxury", label: "✨ Premium Gold", val: "luxury premium elegant dark gold sophisticated exclusive", layoutEn: "elegant centered visual hierarchy with fine gold geometric borders and subtle metallic shimmer" },
-      { id: "neon", label: "🌈 Neon Cyber", val: "tech futuristic neon cyber glow hi-tech digital", layoutEn: "glowing cyan and magenta digital grid lines with dark cybernetic background motifs" },
-      { id: "warm", label: "☀️ Warm & Playful", val: "vibrant friendly cheerful warm energetic colorful", layoutEn: "playful composition with rounded badge containers and energetic splash graphics" },
-      { id: "food", label: "🍽️ Culinary Feast", val: "mouth-watering appetizing warm lighting gourmet", layoutEn: "dramatic food hero composition with steam overlays and warm appetising focus" },
-      { id: "retro", label: "📻 Retro Vintage", val: "retro vintage classic nostalgic badge texture", layoutEn: "vintage emblem layout with subtle noise texture and classic retro framing" },
-      { id: "islami", label: "🕌 Religi & Islami", val: "islamic religious ornament spiritual halal elegant", layoutEn: "arabesque geometric frame border with clean centered title block" }
+      { id: "neon", label: "🌈 Neon Cyber", val: "tech futuristic neon cyber glow hi-tech digital", layoutEn: "glowing cyan and magenta digital grid lines with dark cybernetic background motifs" }
     ];
 
     const PALETTES = [
       { id: "p1", label: "Merah & Hitam", val: "dominant crimson red (#D32F2F) and deep black (#0A0A0A), contrast white text", bg: "from-red-600 to-black", textCol: "#ffffff", accentCol: "#ef4444" },
       { id: "p2", label: "Biru & Putih", val: "dominant navy blue (#0D47A1) and crisp white (#FFFFFF), sky blue accent", bg: "from-blue-600 to-slate-950", textCol: "#ffffff", accentCol: "#38bdf8" },
       { id: "p3", label: "Hitam & Gold", val: "dominant pitch black (#0A0A0A) and metallic gold (#F5C518), elegant warm accent", bg: "from-amber-500 via-neutral-900 to-black", textCol: "#f5c518", accentCol: "#f5c518" },
-      { id: "p4", label: "Hijau & Putih", val: "dominant emerald green (#1B5E20) and fresh white (#FFFFFF), mint accent", bg: "from-emerald-600 to-slate-950", textCol: "#ffffff", accentCol: "#34d399" },
-      { id: "p5", label: "Kuning & Hitam", val: "dominant vivid yellow (#FACC15) and dark black (#0F172A), high impact contrast", bg: "from-yellow-400 to-black", textCol: "#facc15", accentCol: "#facc15" },
-      { id: "p6", label: "Orange & Coklat", val: "dominant warm orange (#EA580C) and espresso brown (#27150C), cream accent", bg: "from-orange-600 to-stone-900", textCol: "#ffffff", accentCol: "#fb923c" },
-      { id: "p7", label: "Ungu & Pink", val: "dominant vibrant purple (#7E22CE) and hot pink (#EC4899), lavender text", bg: "from-purple-700 to-pink-600", textCol: "#ffffff", accentCol: "#f472b6" },
-      { id: "p8", label: "Neon Green & Dark", val: "dominant neon green (#22C55E) and deep dark grey (#111827), cyber white accent", bg: "from-green-500 via-emerald-950 to-black", textCol: "#22c55e", accentCol: "#4ade80" }
+      { id: "p4", label: "Hijau & Putih", val: "dominant emerald green (#1B5E20) and fresh white (#FFFFFF), mint accent", bg: "from-emerald-600 to-slate-950", textCol: "#ffffff", accentCol: "#34d399" }
     ];
 
     const UKURAN = [
       { id: "landscape", label: "Landscape", sub: "16:9 — FB / Spanduk", ar: "16:9", cssAspect: "aspect-[16/9]" },
       { id: "square", label: "Square", sub: "1:1 — IG Feed", ar: "1:1", cssAspect: "aspect-square" },
-      { id: "portrait", label: "Portrait", sub: "9:16 — IG Story / Reels", ar: "9:16", cssAspect: "aspect-[9/16]" },
-      { id: "billboard", label: "Billboard", sub: "4:1 — Banner Panjang", ar: "4:1", cssAspect: "aspect-[4/1]" },
-      { id: "flyer", label: "Flyer A4", sub: "3:4 — Cetak Broshur", ar: "3:4", cssAspect: "aspect-[3/4]" },
-      { id: "xbanner", label: "X-Banner", sub: "1:2 — Roll Up Display", ar: "1:2", cssAspect: "aspect-[1/2]" }
+      { id: "portrait", label: "Portrait", sub: "9:16 — IG Story", ar: "9:16", cssAspect: "aspect-[9/16]" },
+      { id: "billboard", label: "Billboard", sub: "4:1 — Spanduk Panjang", ar: "4:1", cssAspect: "aspect-[4/1]" }
     ];
 
     const AI_TOOLS = [
-      { id: "ideogram", name: "Ideogram 2.0", tag: "--style typography --v 2.0", note: "Recommended: Sangat akurat dalam merender susunan tata letak teks & ejaan Bahasa Indonesia." },
-      { id: "midjourney", name: "Midjourney v6", tag: "--ar {AR} --v 6.0 --style raw", note: "Visual paling estetik & foto-realistis. Gunakan prompt singkat untuk teks." },
-      { id: "flux", name: "Flux.1 (Dev)", tag: "aspect ratio {AR}, ultra sharp typography details", note: "Model open-source terkuat untuk rendering detail objek visual & pencahayaan." },
-      { id: "dalle", name: "DALL-E 3 (ChatGPT)", tag: "Create banner design in {AR} aspect ratio with clean typography rendering.", note: "Mudah dipakai langsung melalui obrolan ChatGPT Plus/Enterprise." }
-    ];
-
-    const PRESETS = [
-      { name: "Kopi Susu Kekinian", bisnisId: "cafe", moodId: "bold", paletteId: "p3", ratioId: "square", engineId: "ideogram", nama: "Masbay Coffee", tagline: "Kopi Susu Gula Aren Asli", promo: "BUY 1 GET 1 FREE", harga: "Rp 15.000", telepon: "0812-9900-1122", alamat: "Jl. Pemuda No. 8, Surakarta" },
-      { name: "Bengkel Motor Kilat", bisnisId: "bengkel", moodId: "bold", paletteId: "p1", ratioId: "landscape", engineId: "ideogram", nama: "Bengkel Masbay Speed", tagline: "Spesialis Tune Up & Ganti Oli", promo: "GRATIS CEK REM & AKI", harga: "Paket Servis 35K", telepon: "0857-4433-2211", alamat: "Kawasan Jebres, Surakarta" },
-      { name: "Laundry Kiloan Bersih", bisnisId: "laundry", moodId: "clean", paletteId: "p2", ratioId: "landscape", engineId: "flux", nama: "Masbay Clean Express", tagline: "Cuci, Setrika & Antar Jemput", promo: "PAKET HEMAT MINGGUAN", harga: "Rp 6.000 / kg", telepon: "0813-1122-3344", alamat: "Jl. Universitas No. 12" },
-      { name: "Barbershop Luxury", bisnisId: "barber", moodId: "luxury", paletteId: "p3", ratioId: "portrait", engineId: "midjourney", nama: "Masbay Executive Cuts", tagline: "Premium Haircut & Hot Towel Shave", promo: "SPECIAL DISCOUNT 25%", harga: "Rp 45.000", telepon: "0821-7788-9900", alamat: "Center Point Plaza Lt. 1" }
+      { id: "ideogram", name: "Ideogram 2.0", tag: "--style typography --v 2.0", note: "Sangat direkomendasikan untuk ejaan teks Bahasa Indonesia yang bersih & rapi." },
+      { id: "midjourney", name: "Midjourney v6", tag: "--ar {AR} --v 6.0 --style raw", note: "Hasil visual sinematik & realitis. Disarankan teks headline dipersingkat." },
+      { id: "flux", name: "Flux.1 (Dev)", tag: "aspect ratio {AR}, ultra sharp typography details", note: "Ketajaman rendering objek & pencahayaan kualitas tinggi." },
+      { id: "dalle", name: "DALL-E 3 (ChatGPT)", tag: "Create banner design in {AR} aspect ratio with clean typography rendering.", note: "Dapat langsung dipasang pada obrolan ChatGPT Plus." }
     ];
 
     function App() {
       const [bisnis, setBisnis] = useState(BISNIS[3]); // Default Cafe
       const [mood, setMood] = useState(MOODS[0]);
-      const [palette, setPalette] = useState(PALETTES[2]); // Black & Gold
+      const [palette, setPalette] = useState(PALETTES[2]); // Hitam & Gold
       const [ukuran, setUkuran] = useState(UKURAN[0]);
       const [aiTool, setAiTool] = useState(AI_TOOLS[0]);
-      
+
       const [form, setForm] = useState({
         nama: "Masbay Coffee & Eatery",
         tagline: "Tempat Nongkrong Kopi Kekinian",
-        promo: "BUY 1 GET 1 FREE KOPI SUSU",
+        promo: "BUY 1 GET 1 FREE KOPI",
         harga: "Mulai Rp 15.000",
         telepon: "0857-9900-1122",
-        alamat: "Kawasan Jebres, Surakarta",
-        catatanKhusus: "Gelas transparan dengan embun dingin, biji kopi roasting sangrai di latar belakang"
+        alamat: "Jl. Pemuda No. 8, Surakarta",
+        visualExtra: "iced artisan boba milk tea and espresso glass with condensation drops, roasted coffee beans background"
       });
 
       const [resultPrompt, setResultPrompt] = useState("");
-      const [activeTab, setActiveTab] = useState("full");
       const [copied, setCopied] = useState(false);
-      const [history, setHistory] = useState([]);
       const [showMockupModal, setShowMockupModal] = useState(false);
 
       const updateField = (k, v) => {
         setForm(prev => ({ ...prev, [k]: v }));
       };
 
-      // Load sample preset
-      const applyPreset = (preset) => {
-        const foundBisnis = BISNIS.find(b => b.id === preset.bisnisId) || BISNIS[0];
-        const foundMood = MOODS.find(m => m.id === preset.moodId) || MOODS[0];
-        const foundPalette = PALETTES.find(p => p.id === preset.paletteId) || PALETTES[0];
-        const foundUkuran = UKURAN.find(u => u.id === preset.ratioId) || UKURAN[0];
-        const foundEngine = AI_TOOLS.find(e => e.id === preset.engineId) || AI_TOOLS[0];
-
-        setBisnis(foundBisnis);
-        setMood(foundMood);
-        setPalette(foundPalette);
-        setUkuran(foundUkuran);
-        setAiTool(foundEngine);
-
-        setForm({
-          nama: preset.nama,
-          tagline: preset.tagline,
-          promo: preset.promo,
-          harga: preset.harga,
-          telepon: preset.telepon,
-          alamat: preset.alamat,
-          catatanKhusus: foundBisnis.visualEn
-        });
-      };
-
+      // Auto Fill Sample Data
       const loadQuickSample = () => {
-        applyPreset(PRESETS[0]);
+        const randomBisnis = BISNIS[Math.floor(Math.random() * BISNIS.length)];
+        setBisnis(randomBisnis);
+        setForm({
+          nama: randomBisnis.sampleName,
+          tagline: randomBisnis.sampleTag,
+          promo: randomBisnis.samplePromo,
+          harga: randomBisnis.sampleHarga,
+          telepon: randomBisnis.samplePhone,
+          alamat: randomBisnis.sampleAddr,
+          visualExtra: randomBisnis.visualEn
+        });
       };
 
       // Generate Engine Prompt Logic
       const generatePrompt = () => {
-        const headlineText = form.promo.trim() || form.tagline.trim() || "SERVIS TERPERCAYA";
+        const headlineText = form.promo.trim() || form.tagline.trim() || "PROMO SPESIAL";
         const subtext = form.tagline.trim();
         const ctaText = form.telepon ? `WA: ${form.telepon}` : "HUBUNGI KAMI SEKARANG";
-
-        let customVisuals = form.catatanKhusus.trim() || bisnis.visualEn;
+        const heroVisual = form.visualExtra.trim() || bisnis.visualEn;
 
         let prompt = `Commercial promotional banner design for business named "${form.nama}" operating in ${bisnis.val}.\n\n`;
         prompt += `ASPECT RATIO / FORMAT: ${ukuran.ar} (${ukuran.sub}).\n`;
         prompt += `VISUAL STYLE & MOOD: ${mood.val}. ${mood.layoutEn}.\n`;
         prompt += `COLOR PALETTE: ${palette.val}.\n`;
-        prompt += `HERO VISUAL ELEMENT: ${customVisuals}.\n\n`;
-        prompt += `TEXT & TYPOGRAPHY LAYOUT (Must render exact Indonesian text strings cleanly without typos):\n`;
-        prompt += `• MAIN HEADLINE (Bold, high contrast, largest focal point): "${headlineText.toUpperCase()}"\n`;
+        prompt += `HERO VISUAL ELEMENT: ${heroVisual}.\n\n`;
+        prompt += `TEXT & TYPOGRAPHY LAYOUT (Must render exact Indonesian text strings cleanly):\n`;
+        prompt += `• MAIN HEADLINE (Bold, high contrast, largest font): "${headlineText.toUpperCase()}"\n`;
         prompt += `• BRAND NAME (Prominent positioning): "${form.nama}"\n`;
         if (subtext && subtext.toUpperCase() !== headlineText.toUpperCase()) {
-          prompt += `• SUB-HEADLINE (Secondary size below headline): "${subtext}"\n`;
+          prompt += `• SUB-HEADLINE (Secondary size): "${subtext}"\n`;
         }
         if (form.harga) {
           prompt += `• PRICE BADGE (Eye-catching highlight box): "${form.harga}"\n`;
         }
-        prompt += `• CALL TO ACTION BUTTON (Contrasting background button): "${ctaText}"\n`;
+        prompt += `• CALL TO ACTION BUTTON (Contrasting button): "${ctaText}"\n`;
         if (form.alamat) {
           prompt += `• LOCATION FOOTER: "${form.alamat}"\n\n`;
         }
@@ -216,98 +276,75 @@
         prompt += `AI GENERATION PARAMETERS: ${engineTag}`;
 
         setResultPrompt(prompt);
-
-        // Add to history log
-        const newHistoryItem = {
-          id: Date.now(),
-          timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-          nama: form.nama,
-          promo: headlineText,
-          engine: aiTool.name,
-          ratio: ukuran.ar,
-          prompt: prompt
-        };
-        setHistory(prev => [newHistoryItem, ...prev.slice(0, 4)]);
       };
 
+      // Auto update prompt saat opsi berubah
       useEffect(() => {
         generatePrompt();
-      }, [bisnis, mood, palette, ukuran, aiTool]);
+      }, [bisnis, mood, palette, ukuran, aiTool, form]);
 
-      const copyToClipboard = (textToCopy) => {
-        const target = textToCopy || resultPrompt;
-        if (!target) return;
-        
-        // Executive copy method for iframe compatibility
-        const el = document.createElement('textarea');
-        el.value = target;
-        document.body.appendChild(el);
-        el.select();
-        document.execCommand('copy');
-        document.body.removeChild(el);
+      // Copy Clipboard Handler
+      const copyToClipboard = () => {
+        if (!resultPrompt) return;
+        const tempTextarea = document.createElement("textarea");
+        tempTextarea.value = resultPrompt;
+        document.body.appendChild(tempTextarea);
+        tempTextarea.select();
+        document.execCommand("copy");
+        document.body.removeChild(tempTextarea);
 
         setCopied(true);
         setTimeout(() => setCopied(false), 2000);
       };
 
-      const headlineWordCount = form.promo.trim() ? form.promo.trim().split(/\s+/).length : 0;
-      const isHeadlineTooLong = headlineWordCount > 5;
+      // Hitung kata pada Teks Promo untuk peringatan ejaan AI
+      const headlineWords = form.promo.trim() ? form.promo.trim().split(/\s+/).length : 0;
+      const isHeadlineTooLong = headlineWords > 5;
 
       return (
-        <div class="min-h-screen flex flex-col justify-between">
+        <div class="min-h-screen flex flex-col justify-between pb-12">
           <div>
             {/* Header */}
-            <header class="bg-darkcard/90 backdrop-blur border-b border-darkborder sticky top-0 z-40 px-4 sm:px-8 py-3.5 shadow-lg">
+            <header class="bg-darkcard/95 backdrop-blur border-b border-darkborder sticky top-0 z-40 px-4 sm:px-8 py-4 shadow-lg">
               <div class="max-w-6xl mx-auto flex flex-wrap items-center justify-between gap-4">
                 <div class="flex items-center gap-3">
-                  <div class="bg-brand text-black font-heading font-extrabold text-xs px-2.5 py-1 rounded-lg tracking-wider flex items-center gap-1 shadow-md shadow-brand/20">
+                  <div class="bg-brand text-black font-heading font-extrabold text-xs px-2.5 py-1 rounded-lg tracking-wider shadow-md shadow-brand/20 flex items-center gap-1.5">
                     <i class="fa-solid fa-bolt"></i>
                     <span>MASBAY v2.0</span>
                   </div>
                   <div>
-                    <h1 class="font-heading font-bold text-base sm:text-lg text-white leading-tight flex items-center gap-2">
+                    <h1 class="font-heading font-bold text-base sm:text-xl text-white leading-tight">
                       AI Prompt Generator
-                      <span class="text-[10px] bg-darkborder text-slate-300 px-2 py-0.5 rounded-full border border-slate-700 font-sans font-normal hidden sm:inline-block">Standalone Engine</span>
                     </h1>
-                    <p class="text-xs text-slate-400 hidden sm:block">Engine Pembuat Prompt Spanduk/Banner UMKM Presisi & Siap Pakai</p>
+                    <p class="text-xs text-slate-400 hidden sm:block">Engine Pembuat Prompt Spanduk/Banner UMKM Presisi</p>
                   </div>
                 </div>
 
                 <div class="flex items-center gap-2.5">
-                  <button onClick={loadQuickSample} class="text-xs bg-darksurface hover:bg-slate-800 text-brand px-3 py-1.5 rounded-xl border border-brand/30 transition flex items-center gap-1.5 font-medium shadow-sm">
+                  <button 
+                    onClick={loadQuickSample} 
+                    class="text-xs bg-darksurface hover:bg-slate-800 text-brand px-3.5 py-2 rounded-xl border border-brand/30 transition flex items-center gap-2 font-medium shadow-sm"
+                  >
                     <i class="fa-solid fa-wand-magic-sparkles"></i>
-                    <span>Isi Contoh Instan</span>
+                    <span>⚡ Isi Contoh Data Instan</span>
                   </button>
 
-                  <button onClick={() => setShowMockupModal(true)} class="text-xs bg-brand/10 hover:bg-brand/20 text-brand border border-brand/40 px-3 py-1.5 rounded-xl transition flex items-center gap-1.5 font-medium">
+                  <button 
+                    onClick={() => setShowMockupModal(true)} 
+                    class="text-xs bg-cyan-500/10 hover:bg-cyan-500/20 text-cyan-400 border border-cyan-500/40 px-3.5 py-2 rounded-xl transition flex items-center gap-2 font-medium"
+                  >
                     <i class="fa-solid fa-eye"></i>
-                    <span>Preview Skema Banner</span>
+                    <span>👁️ Preview Skema Banner</span>
                   </button>
                 </div>
               </div>
             </header>
 
-            {/* Main Content */}
-            <main class="max-w-6xl mx-auto px-4 sm:px-6 mt-6 space-y-6">
-
-              {/* Quick Preset Selector Bar */}
-              <div class="bg-darkcard border border-darkborder rounded-2xl p-3 shadow-md flex items-center gap-2 overflow-x-auto">
-                <span class="text-xs text-slate-400 font-semibold px-2 whitespace-nowrap flex items-center gap-1">
-                  <i class="fa-solid fa-bookmark text-brand"></i> Preset Instan:
-                </span>
-                {PRESETS.map((p, idx) => (
-                  <button 
-                    key={idx} 
-                    onClick={() => applyPreset(p)}
-                    class="text-xs bg-darkbg hover:bg-darksurface text-slate-300 hover:text-brand border border-darkborder px-3 py-1 rounded-xl whitespace-nowrap transition flex items-center gap-1.5"
-                  >
-                    <span>{p.name}</span>
-                  </button>
-                ))}
-              </div>
+            {/* Content Container */}
+            <main class="max-w-6xl mx-auto px-4 sm:px-6 mt-8 space-y-6">
 
               {/* Step 1: Kategori Bisnis */}
-              <section class="bg-darkcard border border-darkborder rounded-2xl p-5 shadow-xl transition-all">
+              <section class="bg-darkcard border border-darkborder rounded-2xl p-5 shadow-xl">
                 <div class="flex items-center justify-between mb-3">
                   <h2 class="text-xs font-bold text-brand uppercase tracking-wider flex items-center gap-2">
                     <span class="w-5 h-5 rounded-full bg-brand text-black flex items-center justify-center text-[10px] font-extrabold">1</span>
@@ -316,23 +353,21 @@
                   <span class="text-[11px] text-slate-400">Terpilih: <strong class="text-white">{bisnis.label}</strong></span>
                 </div>
                 
-                <div class="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-6 gap-2.5">
+                <div class="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-8 gap-2.5">
                   {BISNIS.map(b => (
                     <button 
                       key={b.id} 
                       onClick={() => {
                         setBisnis(b);
-                        if (!form.catatanKhusus || form.catatanKhusus === bisnis.visualEn) {
-                          updateField("catatanKhusus", b.visualEn);
-                        }
+                        updateField("visualExtra", b.visualEn);
                       }} 
-                      class={`p-3 rounded-xl border text-left text-xs transition-all flex flex-col items-center justify-center text-center gap-1.5 group ${
+                      class={`p-3 rounded-xl border text-left text-xs transition-all flex flex-col items-center justify-center text-center gap-2 ${
                         bisnis.id === b.id 
                           ? 'bg-brand/10 border-brand text-brand font-semibold shadow-lg shadow-brand/5 scale-[1.02]' 
                           : 'bg-darkbg border-darkborder text-slate-300 hover:border-slate-700 hover:bg-darksurface'
                       }`}
                     >
-                      <span class="text-2xl group-hover:scale-110 transition-transform">{b.icon}</span>
+                      <span class="text-2xl">{b.icon}</span>
                       <span class="line-clamp-1">{b.label}</span>
                     </button>
                   ))}
@@ -343,12 +378,12 @@
               <section class="bg-darkcard border border-darkborder rounded-2xl p-5 shadow-xl">
                 <h2 class="text-xs font-bold text-brand uppercase tracking-wider mb-4 flex items-center gap-2">
                   <span class="w-5 h-5 rounded-full bg-brand text-black flex items-center justify-center text-[10px] font-extrabold">2</span>
-                  Informasi Teks Banner & Promo
+                  Informasi Teks Spanduk / Banner
                 </h2>
 
                 <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
                   <div>
-                    <label class="block text-xs font-medium text-slate-400 mb-1">Nama Bisnis / Brand *</label>
+                    <label class="block text-xs font-medium text-slate-400 mb-1">Nama Bisnis / Brand</label>
                     <input 
                       type="text" 
                       class="w-full bg-darkbg border border-darkborder rounded-xl px-3.5 py-2.5 text-xs text-white focus:outline-none focus:border-brand transition" 
@@ -359,18 +394,18 @@
                   </div>
 
                   <div>
-                    <label class="block text-xs font-medium text-slate-400 mb-1">Tagline / Sub-Headline</label>
+                    <label class="block text-xs font-medium text-slate-400 mb-1">Tagline / Deskripsi Singkat</label>
                     <input 
                       type="text" 
                       class="w-full bg-darkbg border border-darkborder rounded-xl px-3.5 py-2.5 text-xs text-white focus:outline-none focus:border-brand transition" 
-                      placeholder="Contoh: Cepat, Presisi & Bergaransi"
+                      placeholder="Contoh: Servis Cepat & Bergaransi"
                       value={form.tagline} 
                       onChange={e => updateField("tagline", e.target.value)} 
                     />
                   </div>
 
                   <div>
-                    <label class="block text-xs font-medium text-slate-400 mb-1">Teks Promo / Headline Utama *</label>
+                    <label class="block text-xs font-medium text-slate-400 mb-1">Teks Promo / Headline Utama</label>
                     <input 
                       type="text" 
                       class="w-full bg-darkbg border border-darkborder rounded-xl px-3.5 py-2.5 text-xs text-white focus:outline-none focus:border-brand transition" 
@@ -381,7 +416,7 @@
                   </div>
 
                   <div>
-                    <label class="block text-xs font-medium text-slate-400 mb-1">Badge Harga / Penawaran (Opsional)</label>
+                    <label class="block text-xs font-medium text-slate-400 mb-1">Badge Harga / Penawaran</label>
                     <input 
                       type="text" 
                       class="w-full bg-darkbg border border-darkborder rounded-xl px-3.5 py-2.5 text-xs text-white focus:outline-none focus:border-brand transition" 
@@ -392,7 +427,7 @@
                   </div>
 
                   <div>
-                    <label class="block text-xs font-medium text-slate-400 mb-1">No. WhatsApp / Kontak CTA</label>
+                    <label class="block text-xs font-medium text-slate-400 mb-1">No. WA / Kontak</label>
                     <input 
                       type="text" 
                       class="w-full bg-darkbg border border-darkborder rounded-xl px-3.5 py-2.5 text-xs text-white focus:outline-none focus:border-brand transition" 
@@ -403,7 +438,7 @@
                   </div>
 
                   <div>
-                    <label class="block text-xs font-medium text-slate-400 mb-1">Alamat Singkat / Lokasi</label>
+                    <label class="block text-xs font-medium text-slate-400 mb-1">Alamat Singkat</label>
                     <input 
                       type="text" 
                       class="w-full bg-darkbg border border-darkborder rounded-xl px-3.5 py-2.5 text-xs text-white focus:outline-none focus:border-brand transition" 
@@ -414,95 +449,66 @@
                   </div>
                 </div>
 
-                {/* Dynamic Warning Indicator */}
+                {/* Indikator Peringatan Panjang Headline */}
                 {isHeadlineTooLong && (
                   <div class="mt-4 bg-amber-500/10 border border-amber-500/30 rounded-xl p-3 flex items-start gap-2 text-amber-300 text-xs">
                     <i class="fa-solid fa-triangle-exclamation text-amber-400 text-base mt-0.5"></i>
                     <div>
-                      <strong>Peringatan Ejaan AI Visual ({headlineWordCount} kata):</strong>
-                      <p class="text-[11px] text-amber-200/80 mt-0.5">⚠️ Tips: Teks headline >5 kata rentan typo/gibberish di AI visual. Buat headline lebih singkat & padat untuk hasil ejaan sempurna!</p>
+                      <strong>⚠️ Tips: Teks headline &gt;5 kata ({headlineWords} kata saat ini) rentan typo di AI visual. Buat lebih singkat!</strong>
                     </div>
                   </div>
                 )}
-
-                {/* Custom Visual Detail Description */}
-                <div class="mt-4">
-                  <label class="block text-xs font-medium text-slate-400 mb-1 flex items-center justify-between">
-                    <span>Elemen Visual Tambahan (Bahasa Inggris Disarankan)</span>
-                    <span class="text-[10px] text-brand">Otomatis terisi dari kategori bisnis</span>
-                  </label>
-                  <input 
-                    type="text" 
-                    class="w-full bg-darkbg border border-darkborder rounded-xl px-3.5 py-2.5 text-xs text-slate-200 font-mono focus:outline-none focus:border-brand transition"
-                    value={form.catatanKhusus}
-                    onChange={e => updateField("catatanKhusus", e.target.value)}
-                  />
-                </div>
               </section>
 
               {/* Step 3: Style Visual & Warna */}
               <section class="grid grid-cols-1 md:grid-cols-2 gap-6">
                 
                 {/* Mood Selection */}
-                <div class="bg-darkcard border border-darkborder rounded-2xl p-5 shadow-xl flex flex-col justify-between">
-                  <div>
-                    <h2 class="text-xs font-bold text-brand uppercase tracking-wider mb-3 flex items-center gap-2">
-                      <span class="w-5 h-5 rounded-full bg-brand text-black flex items-center justify-center text-[10px] font-extrabold">3</span>
-                      Gaya Visual & Mood
-                    </h2>
-                    
-                    <div class="grid grid-cols-2 gap-2">
-                      {MOODS.map(m => (
-                        <button 
-                          key={m.id} 
-                          onClick={() => setMood(m)}
-                          class={`p-2.5 rounded-xl border text-left text-xs transition-all ${
-                            mood.id === m.id 
-                              ? 'bg-brand/10 border-brand text-brand font-semibold shadow-md' 
-                              : 'bg-darkbg border-darkborder text-slate-300 hover:border-slate-700'
-                          }`}
-                        >
-                          <div class="font-medium">{m.label}</div>
-                        </button>
-                      ))}
-                    </div>
-                  </div>
-
-                  <div class="mt-4 bg-darkbg p-3 rounded-xl border border-darkborder text-[11px] text-slate-400">
-                    <span class="text-slate-200 font-semibold block mb-0.5">Layout Komposisi:</span>
-                    {mood.layoutEn}
+                <div class="bg-darkcard border border-darkborder rounded-2xl p-5 shadow-xl">
+                  <h2 class="text-xs font-bold text-brand uppercase tracking-wider mb-3 flex items-center gap-2">
+                    <span class="w-5 h-5 rounded-full bg-brand text-black flex items-center justify-center text-[10px] font-extrabold">3</span>
+                    Gaya Visual & Mood
+                  </h2>
+                  
+                  <div class="grid grid-cols-2 gap-2">
+                    {MOODS.map(m => (
+                      <button 
+                        key={m.id} 
+                        onClick={() => setMood(m)}
+                        class={`p-3 rounded-xl border text-left text-xs transition-all ${
+                          mood.id === m.id 
+                            ? 'bg-brand/10 border-brand text-brand font-semibold shadow-md' 
+                            : 'bg-darkbg border-darkborder text-slate-300 hover:border-slate-700'
+                        }`}
+                      >
+                        <div class="font-medium">{m.label}</div>
+                      </button>
+                    ))}
                   </div>
                 </div>
 
                 {/* Palette Selection */}
-                <div class="bg-darkcard border border-darkborder rounded-2xl p-5 shadow-xl flex flex-col justify-between">
-                  <div>
-                    <h2 class="text-xs font-bold text-brand uppercase tracking-wider mb-3 flex items-center gap-2">
-                      <span class="w-5 h-5 rounded-full bg-brand text-black flex items-center justify-center text-[10px] font-extrabold">4</span>
-                      Palet Warna Dominan
-                    </h2>
+                <div class="bg-darkcard border border-darkborder rounded-2xl p-5 shadow-xl">
+                  <h2 class="text-xs font-bold text-brand uppercase tracking-wider mb-3 flex items-center gap-2">
+                    <span class="w-5 h-5 rounded-full bg-brand text-black flex items-center justify-center text-[10px] font-extrabold">4</span>
+                    Palet Warna Dominan
+                  </h2>
 
-                    <div class="grid grid-cols-2 gap-2">
-                      {PALETTES.map(p => (
-                        <button 
-                          key={p.id} 
-                          onClick={() => setPalette(p)}
-                          class={`p-2.5 rounded-xl border text-left text-xs transition-all flex items-center gap-2.5 ${
-                            palette.id === p.id 
-                              ? 'bg-brand/10 border-brand text-white font-semibold shadow-md' 
-                              : 'bg-darkbg border-darkborder text-slate-400 hover:border-slate-700'
-                          }`}
-                        >
-                          <div class={`w-5 h-5 rounded-md bg-gradient-to-r ${p.bg} border border-white/20 flex-shrink-0`}></div>
-                          <span class="truncate">{p.label}</span>
-                        </button>
-                      ))}
-                    </div>
-                  </div>
-
-                  <div class="mt-4 bg-darkbg p-3 rounded-xl border border-darkborder text-[11px] text-slate-400">
-                    <span class="text-slate-200 font-semibold block mb-0.5">Deskripsi Warna AI:</span>
-                    {palette.val}
+                  <div class="grid grid-cols-2 gap-2">
+                    {PALETTES.map(p => (
+                      <button 
+                        key={p.id} 
+                        onClick={() => setPalette(p)}
+                        class={`p-3 rounded-xl border text-left text-xs transition-all flex items-center gap-2.5 ${
+                          palette.id === p.id 
+                            ? 'bg-brand/10 border-brand text-white font-semibold shadow-md' 
+                            : 'bg-darkbg border-darkborder text-slate-400 hover:border-slate-700'
+                        }`}
+                      >
+                        <div class={`w-5 h-5 rounded-md bg-gradient-to-r ${p.bg} border border-white/20 flex-shrink-0`}></div>
+                        <span class="truncate">{p.label}</span>
+                      </button>
+                    ))}
                   </div>
                 </div>
 
@@ -518,7 +524,7 @@
                     Format & Rasio Ukuran Spanduk
                   </h2>
 
-                  <div class="grid grid-cols-2 sm:grid-cols-3 gap-2.5">
+                  <div class="grid grid-cols-2 gap-2.5">
                     {UKURAN.map(u => (
                       <button 
                         key={u.id} 
@@ -556,7 +562,6 @@
                           }`}
                         >
                           <div class="font-medium text-white">{a.name}</div>
-                          <div class="text-[10px] text-cyan-400 font-mono mt-0.5 truncate">{a.tag.replace("{AR}", ukuran.ar)}</div>
                         </button>
                       ))}
                     </div>
@@ -565,38 +570,37 @@
                   <div class="mt-4 bg-cyan-950/20 border border-cyan-800/40 p-3 rounded-xl text-[11px] text-cyan-200/90 flex items-start gap-2">
                     <i class="fa-solid fa-lightbulb text-cyan-400 text-sm mt-0.5"></i>
                     <div>
-                      <strong>Tips Engine {aiTool.name}:</strong> {aiTool.note}
+                      <strong>Petunjuk Engine {aiTool.name}:</strong> {aiTool.note}
                     </div>
                   </div>
                 </div>
 
               </section>
 
+              {/* Action Button Generate Manual */}
+              <button 
+                onClick={generatePrompt} 
+                class="w-full bg-gradient-to-r from-brand to-amber-500 hover:from-amber-400 hover:to-brand text-black font-heading font-bold text-base py-4 rounded-xl shadow-lg shadow-brand/10 transition transform active:scale-[0.99] flex items-center justify-center gap-2"
+              >
+                <i class="fa-solid fa-bolt text-lg"></i>
+                <span>⚡ Generate Prompt Presisi Sekarang</span>
+              </button>
+
               {/* Output Display & Copy Section */}
               <section class="bg-darkcard border border-darkborder rounded-2xl p-5 shadow-2xl space-y-4">
                 <div class="flex flex-wrap items-center justify-between gap-3 border-b border-darkborder pb-3">
                   <div class="flex items-center gap-2">
                     <i class="fa-solid fa-code text-brand text-base"></i>
-                    <h3 class="text-sm font-bold text-white uppercase tracking-wider font-heading">Hasil Prompt Banner Presisi</h3>
+                    <h3 class="text-sm font-bold text-white uppercase tracking-wider font-heading">Hasil Prompt Spanduk Presisi</h3>
                   </div>
 
-                  <div class="flex items-center gap-2">
-                    <button 
-                      onClick={() => generatePrompt()}
-                      class="text-xs bg-darksurface hover:bg-slate-800 text-slate-300 border border-darkborder px-3 py-1.5 rounded-xl transition flex items-center gap-1.5"
-                    >
-                      <i class="fa-solid fa-arrows-rotate text-brand"></i>
-                      <span>Regenerate</span>
-                    </button>
-
-                    <button 
-                      onClick={() => copyToClipboard()}
-                      class="text-xs bg-brand hover:bg-brandHover text-black font-bold px-4 py-1.5 rounded-xl transition flex items-center gap-1.5 shadow-md shadow-brand/10"
-                    >
-                      <i class="fa-solid fa-copy"></i>
-                      <span>{copied ? "✅ Tersalin!" : "📋 Copy Prompt"}</span>
-                    </button>
-                  </div>
+                  <button 
+                    onClick={copyToClipboard}
+                    class="text-xs bg-brand hover:bg-brandHover text-black font-bold px-4 py-2 rounded-xl transition flex items-center gap-2 shadow-md shadow-brand/10"
+                  >
+                    <i class="fa-solid fa-copy"></i>
+                    <span>{copied ? "✅ Tersalin ke Clipboard!" : "📋 Copy Prompt"}</span>
+                  </button>
                 </div>
 
                 <div class="relative">
@@ -607,34 +611,12 @@
                     value={resultPrompt}
                   ></textarea>
                 </div>
-
-                {/* History Log */}
-                {history.length > 0 && (
-                  <div class="pt-2">
-                    <h4 class="text-[11px] font-semibold text-slate-400 mb-2 flex items-center gap-1.5">
-                      <i class="fa-solid fa-clock-rotate-left text-brand"></i> Riwayat Prompt Terakhir:
-                    </h4>
-                    <div class="flex flex-wrap gap-2">
-                      {history.map(item => (
-                        <button
-                          key={item.id}
-                          onClick={() => setResultPrompt(item.prompt)}
-                          class="text-[11px] bg-darkbg hover:bg-darksurface border border-darkborder text-slate-300 px-2.5 py-1 rounded-lg transition flex items-center gap-1.5"
-                        >
-                          <span class="text-brand font-mono">[{item.timestamp}]</span>
-                          <span class="truncate max-w-[120px]">{item.nama}</span>
-                          <span class="text-slate-500 text-[10px]">({item.engine})</span>
-                        </button>
-                      ))}
-                    </div>
-                  </div>
-                )}
               </section>
 
             </main>
           </div>
 
-          {/* Interactive Visual Schematic Mockup Modal */}
+          {/* Interactive Modal Preview Skema Banner */}
           {showMockupModal && (
             <div class="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
               <div class="bg-darkcard border border-darkborder rounded-2xl max-w-lg w-full p-6 shadow-2xl relative space-y-4">
@@ -650,24 +632,21 @@
                     <i class="fa-solid fa-compass-drafting text-brand"></i>
                     Skema Komposisi Banner AI
                   </h3>
-                  <p class="text-xs text-slate-400">Preview tata letak visual & posisi hirarki teks pada canvas {ukuran.ar}</p>
+                  <p class="text-xs text-slate-400">Preview visual posisi elemen & hirarki teks spanduk (Rasio {ukuran.ar})</p>
                 </div>
 
-                {/* Canvas Container */}
+                {/* Canvas Box */}
                 <div class="bg-darkbg border border-darkborder rounded-xl p-4 flex items-center justify-center min-h-[260px]">
                   <div class={`w-full max-w-xs ${ukuran.cssAspect} bg-gradient-to-br ${palette.bg} rounded-lg p-3 border border-white/20 flex flex-col justify-between shadow-2xl relative overflow-hidden text-center`}>
                     
-                    {/* Background Graphic Mock */}
-                    <div class="absolute inset-0 opacity-15 bg-[radial-gradient(#fff_1px,transparent_1px)] [background-size:12px_12px] pointer-events-none"></div>
-
-                    {/* Top Header / Brand */}
+                    {/* Brand Name Top */}
                     <div class="z-10">
                       <span class="inline-block bg-black/60 text-brand text-[10px] font-bold px-2 py-0.5 rounded border border-brand/30 uppercase tracking-wider">
                         {form.nama || "NAMA BISNIS"}
                       </span>
                     </div>
 
-                    {/* Hero Visual Icon Placeholder */}
+                    {/* Headline Center */}
                     <div class="z-10 my-auto py-2">
                       <div class="text-3xl mb-1 drop-shadow-md">{bisnis.icon}</div>
                       <h4 class="font-heading font-extrabold text-sm sm:text-base leading-tight uppercase tracking-wide drop-shadow text-white">
@@ -678,7 +657,7 @@
                       )}
                     </div>
 
-                    {/* Bottom CTA & Price */}
+                    {/* Footer CTA & Price */}
                     <div class="z-10 space-y-1 mt-auto">
                       {form.harga && (
                         <div class="inline-block bg-brand text-black font-extrabold text-[10px] px-2 py-0.5 rounded shadow">
@@ -698,7 +677,7 @@
                 <div class="text-right">
                   <button 
                     onClick={() => setShowMockupModal(false)}
-                    class="bg-brand text-black font-bold text-xs px-4 py-2 rounded-xl"
+                    class="bg-brand hover:bg-brandHover text-black font-bold text-xs px-4 py-2 rounded-xl"
                   >
                     Tutup Preview
                   </button>
@@ -709,7 +688,7 @@
 
           {/* Footer */}
           <footer class="mt-12 text-center text-xs text-slate-500 border-t border-darkborder py-6 px-4">
-            <p>MASBAY Generator v2.0 · Engine Pembuat Prompt Banner AI Presisi 🚀</p>
+            <p>MASBAY Generator v2.0 · Engine Pembuat Prompt Spanduk AI Presisi 🚀</p>
             <p class="text-[11px] text-slate-600 mt-1">Ciptaan Bayu Nurcahyo (Mahasiswa Bisnis Digital POLITEKNIK AKBARA SURAKARTA)</p>
           </footer>
         </div>
